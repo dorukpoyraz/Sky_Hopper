@@ -24,11 +24,17 @@ dragging_jump = False
 slider_x = 200
 slider_width = 300
 
+
 start_button_rect = pygame.Rect(0, 0, 0, 0)
 settings_button_rect = pygame.Rect(0, 0, 0, 0)
+exit_button_rect = pygame.Rect(0, 0, 0, 0)       
 back_button_rect = pygame.Rect(0, 0, 0, 0)
 music_slider_rect = pygame.Rect(0, 0, 0, 0)
 jump_slider_rect = pygame.Rect(0, 0, 0, 0)
+
+
+play_again_btn_rect = pygame.Rect(0, 0, 0, 0)
+menu_btn_rect = pygame.Rect(0, 0, 0, 0)
 
 try:
     raw_platform = pygame.image.load("platform.png").convert_alpha()
@@ -297,6 +303,8 @@ reset_game()
 
 running = True
 while running:
+    mouse_pos = pygame.mouse.get_pos()
+    
     if not game_started:
         if not in_settings:
             screen.fill((30, 34, 56)) 
@@ -304,13 +312,13 @@ while running:
                 pygame.draw.circle(screen, (255, 255, 255), (star[0], star[1]), star[2])
                 
             title_text = title_font.render("SKY HOPPER", True, (245, 197, 66))
-            screen.blit(title_text, (350 - title_text.get_width() // 2, 100))
+            screen.blit(title_text, (350 - title_text.get_width() // 2, 70))
             
             btn_width, btn_height = 240, 60
-            btn_x, btn_y = 350 - btn_width // 2, 220
+            btn_x, btn_y = 350 - btn_width // 2, 180
             start_button_rect = pygame.Rect(btn_x, btn_y, btn_width, btn_height)
-            mouse_pos = pygame.mouse.get_pos()
             
+           
             if start_button_rect.collidepoint(mouse_pos):
                 button_color, text_color = (60, 180, 120), (255, 255, 255)
             else:
@@ -321,6 +329,7 @@ while running:
             btn_text = font.render("START GAME", True, text_color)
             screen.blit(btn_text, (btn_x + (btn_width - btn_text.get_width()) // 2, btn_y + (btn_height - btn_text.get_height()) // 2))
 
+        
             settings_btn_y = btn_y + 80
             settings_button_rect = pygame.Rect(btn_x, settings_btn_y, btn_width, btn_height)
             
@@ -333,6 +342,20 @@ while running:
             pygame.draw.rect(screen, s_button_color, settings_button_rect, border_radius=10)
             s_btn_text = font.render("SETTINGS", True, s_text_color)
             screen.blit(s_btn_text, (btn_x + (btn_width - s_btn_text.get_width()) // 2, settings_btn_y + (btn_height - s_btn_text.get_height()) // 2))
+            
+            # --- EXIT BUTONU ---
+            exit_btn_y = btn_y + 160
+            exit_button_rect = pygame.Rect(btn_x, exit_btn_y, btn_width, btn_height)
+            
+            if exit_button_rect.collidepoint(mouse_pos):
+                e_button_color, e_text_color = (200, 60, 60), (255, 255, 255)
+            else:
+                e_button_color, e_text_color = (20, 24, 46), (240, 240, 240)
+                
+            pygame.draw.rect(screen, (245, 197, 66), (btn_x - 3, exit_btn_y - 3, btn_width + 6, btn_height + 6), border_radius=10)
+            pygame.draw.rect(screen, e_button_color, exit_button_rect, border_radius=10)
+            e_btn_text = font.render("EXIT", True, e_text_color)
+            screen.blit(e_btn_text, (btn_x + (btn_width - e_btn_text.get_width()) // 2, exit_btn_y + (btn_height - e_btn_text.get_height()) // 2))
             
         else:
             screen.fill((30, 34, 56)) 
@@ -372,7 +395,6 @@ while running:
             back_w, back_h = 160, 50
             back_x, back_y = 350 - back_w // 2, box_y + 340
             back_button_rect = pygame.Rect(back_x, back_y, back_w, back_h)
-            mouse_pos = pygame.mouse.get_pos()
             
             if back_button_rect.collidepoint(mouse_pos):
                 b_color, b_text_color = (200, 60, 60), (255, 255, 255)
@@ -571,14 +593,14 @@ while running:
 
         if game_won or game_over:
             screen.fill((30, 34, 56))
-            end_box_width, end_box_height = 400, 320
+            end_box_width, end_box_height = 400, 380 
             end_box_x, end_box_y = (700 - end_box_width) // 2, (500 - end_box_height) // 2
             
-            pygame.draw.rect(screen, (10, 10, 20), (end_box_x - 5, end_box_y - 5, end_box_width + 10, end_box_height + 10))
-            pygame.draw.rect(screen, (20, 24, 46), (end_box_x, end_box_y, end_box_width, end_box_height))
+            pygame.draw.rect(screen, (10, 10, 20), (end_box_x - 5, end_box_y - 5, end_box_width + 10, end_box_height + 10), border_radius=15)
+            pygame.draw.rect(screen, (20, 24, 46), (end_box_x, end_box_y, end_box_width, end_box_height), border_radius=15)
 
             win_lose_text = title_font.render('YOU WIN!' if game_won else 'GAME OVER!', True, (120, 255, 160) if game_won else (255, 100, 100))
-            screen.blit(win_lose_text, (end_box_x + (end_box_width - win_lose_text.get_width()) // 2, end_box_y + 40))
+            screen.blit(win_lose_text, (end_box_x + (end_box_width - win_lose_text.get_width()) // 2, end_box_y + 30))
 
             texts_to_show = [
                 f'Time: {round(finish_time, 1)}s',
@@ -586,14 +608,44 @@ while running:
                 f'Best: {round(best_time, 1)}s' if best_time > 0 else 'Best: --'
             ]
 
-            text_y_offset = end_box_y + 120
+            text_y_offset = end_box_y + 110
             for info_text in texts_to_show:
                 rendered_text = font.render(info_text, True, (240, 240, 240))
                 screen.blit(rendered_text, (end_box_x + (end_box_width - rendered_text.get_width()) // 2, text_y_offset))
-                text_y_offset += 45
+                text_y_offset += 40
             
-            play_again_text = font.render('Press "R" to Play Again', True, (245, 197, 66))
-            screen.blit(play_again_text, (end_box_x + (end_box_width - play_again_text.get_width()) // 2, end_box_y + 250))
+          
+            eb_btn_w, eb_btn_h = 220, 50
+            
+         
+            play_again_x = end_box_x + (end_box_width - eb_btn_w) // 2
+            play_again_y = end_box_y + 240
+            play_again_btn_rect = pygame.Rect(play_again_x, play_again_y, eb_btn_w, eb_btn_h)
+            
+            if play_again_btn_rect.collidepoint(mouse_pos):
+                pa_color, pa_text_color = (60, 180, 120), (255, 255, 255)
+            else:
+                pa_color, pa_text_color = (20, 24, 46), (240, 240, 240)
+                
+            pygame.draw.rect(screen, (245, 197, 66), (play_again_x - 3, play_again_y - 3, eb_btn_w + 6, eb_btn_h + 6), border_radius=10)
+            pygame.draw.rect(screen, pa_color, play_again_btn_rect, border_radius=10)
+            pa_text = font.render("PLAY AGAIN", True, pa_text_color)
+            screen.blit(pa_text, (play_again_x + (eb_btn_w - pa_text.get_width()) // 2, play_again_y + (eb_btn_h - pa_text.get_height()) // 2))
+
+            
+            menu_x = end_box_x + (end_box_width - eb_btn_w) // 2
+            menu_y = end_box_y + 310
+            menu_btn_rect = pygame.Rect(menu_x, menu_y, eb_btn_w, eb_btn_h)
+            
+            if menu_btn_rect.collidepoint(mouse_pos):
+                mm_color, mm_text_color = (180, 120, 60), (255, 255, 255)
+            else:
+                mm_color, mm_text_color = (20, 24, 46), (240, 240, 240)
+                
+            pygame.draw.rect(screen, (245, 197, 66), (menu_x - 3, menu_y - 3, eb_btn_w + 6, eb_btn_h + 6), border_radius=10)
+            pygame.draw.rect(screen, mm_color, menu_btn_rect, border_radius=10)
+            mm_text = font.render("MAIN MENU", True, mm_text_color)
+            screen.blit(mm_text, (menu_x + (eb_btn_w - mm_text.get_width()) // 2, menu_y + (eb_btn_h - mm_text.get_height()) // 2))
 
         else:
             screen.fill((30, 34, 56))
@@ -699,16 +751,14 @@ while running:
                 transition_alpha = 0
                 transition_state = 0
     
+  
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r and (game_won or game_over):
-                reset_game()
-                
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
+            
             if not game_started:
                 if not in_settings:
                     if start_button_rect.collidepoint(mouse_pos):
@@ -716,6 +766,8 @@ while running:
                         reset_game()
                     elif settings_button_rect.collidepoint(mouse_pos):
                         in_settings = True
+                    elif exit_button_rect.collidepoint(mouse_pos):
+                        running = False
                 else:
                     if back_button_rect.collidepoint(mouse_pos):
                         in_settings = False
@@ -724,6 +776,13 @@ while running:
                         dragging_music = True
                     elif jump_slider_rect.collidepoint(mouse_pos):
                         dragging_jump = True
+            else:
+       
+                if game_won or game_over:
+                    if play_again_btn_rect.collidepoint(mouse_pos):
+                        reset_game()
+                    elif menu_btn_rect.collidepoint(mouse_pos):
+                        game_started = False
 
         if event.type == pygame.MOUSEBUTTONUP:
             dragging_music = False
