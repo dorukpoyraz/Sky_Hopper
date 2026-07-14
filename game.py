@@ -22,12 +22,10 @@ dragging_jump = False
 slider_x = 200
 slider_width = 300
 
-# Ekran Sarsıntısı ve Parçacıklar
 screen_shake = 0
 particles = []
 ghost_trails = []
 
-# Dash Mekaniği
 dash_cooldown = 0
 dash_duration = 0
 is_dashing = False
@@ -128,7 +126,7 @@ except Exception as e:
 
 level_1_platforms = [pygame.Rect(0, 470, 280, 30), pygame.Rect(420, 470, 280, 30), pygame.Rect(150, 380, 120, 20), pygame.Rect(340, 300, 120, 20), pygame.Rect(520, 220, 120, 20), pygame.Rect(260, 160, 100, 20)]
 level_1_coins = [pygame.Rect(200, 345, 16, 16), pygame.Rect(390, 265, 16, 16), pygame.Rect(560, 185, 16, 16), pygame.Rect(300, 130, 16, 16)]
-level_1_hazards = [] # Düşüş arasına lav/tuzak (kaldırıldı)
+level_1_hazards = [] 
 
 level_2_platforms = [pygame.Rect(0, 470, 150, 30), pygame.Rect(250, 400, 120, 20), pygame.Rect(500, 330, 120, 20), pygame.Rect(220, 250, 100, 20), pygame.Rect(20, 180, 120, 20), pygame.Rect(400, 120, 200, 20), pygame.Rect(425, 470, 375, 30)]
 level_2_coins = [pygame.Rect(290, 365, 16, 16), pygame.Rect(540, 295, 16, 16), pygame.Rect(60, 145, 16, 16), pygame.Rect(492, 94, 16, 16)]
@@ -140,7 +138,7 @@ level_3_hazards = []
 
 level_4_platforms = [pygame.Rect(0, 470, 150, 30), pygame.Rect(150, 380, 80, 20), pygame.Rect(300, 380, 80, 20), pygame.Rect(550, 300, 80, 20), pygame.Rect(350, 200, 80, 20), pygame.Rect(100, 100, 100, 20), pygame.Rect(354.5, 470, 200, 30)]
 level_4_coins = [pygame.Rect(180, 345, 16, 16), pygame.Rect(330, 345, 16, 16), pygame.Rect(580, 265, 16, 16), pygame.Rect(142, 74, 16, 16)]
-level_4_hazards = [] # Platformlar arası havada tehlike (kaldırıldı)
+level_4_hazards = [] 
 
 level_5_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(120, 370, 60, 20), pygame.Rect(30, 270, 60, 20), pygame.Rect(200, 180, 60, 20), pygame.Rect(400, 180, 100, 20), pygame.Rect(600, 100, 80, 20), pygame.Rect(356.5, 295, 73, 20)]
 level_5_coins = [pygame.Rect(140, 335, 16, 16), pygame.Rect(50, 235, 16, 16), pygame.Rect(220, 145, 16, 16), pygame.Rect(632, 74, 16, 16)]
@@ -457,15 +455,13 @@ while running:
             keys = pygame.key.get_pressed()
             can_move = not is_door_opening and transition_state == 0
             
-            # DASH MEKANİĞİ - Cooldown ve Duration Kontrolü
             if dash_cooldown > 0: dash_cooldown -= 1
             if dash_duration > 0:
                 is_dashing = True
                 dash_duration -= 1
                 player.x += dash_speed if facing_right else -dash_speed
-                vel_y = 0 # Dash sırasında yerçekiminden etkilenmez
-                
-                # Ghost Trail Efekti Ekle
+                vel_y = 0 
+      
                 if has_sprites and dash_duration % 2 == 0:
                     ghost_trails.append({"x": player.x, "y": player.y, "frame": animation_frame, "facing": facing_right, "alpha": 150})
             else:
@@ -475,7 +471,7 @@ while running:
                 if keys[pygame.K_LSHIFT] and dash_cooldown == 0:
                     dash_duration = 10
                     dash_cooldown = 40
-                    if jump_sound: jump_sound.play() # Dash Sesi (Jump sesini kullanabiliriz)
+                    if jump_sound: jump_sound.play() 
                     spawn_particles(player.centerx, player.centery, (100, 200, 255), 15, 6, 4)
 
                 if keys[pygame.K_LEFT]: 
@@ -491,12 +487,12 @@ while running:
                             vel_y = -15
                             if jump_sound: jump_sound.play()
                             can_double_jump = True
-                            spawn_particles(player.centerx, player.bottom, (255, 255, 255), 8) # Zıplama efekti
+                            spawn_particles(player.centerx, player.bottom, (255, 255, 255), 8) 
                         elif can_double_jump:
                             vel_y = -15
                             if jump_sound: jump_sound.play()
                             can_double_jump = False
-                            spawn_particles(player.centerx, player.bottom, (150, 200, 255), 12) # Çift Zıplama efekti
+                            spawn_particles(player.centerx, player.bottom, (150, 200, 255), 12) 
                         space_pressed = True
                 else:
                     space_pressed = False 
@@ -533,8 +529,8 @@ while running:
                         
                         if not was_on_ground:
                             if land_sound: land_sound.play()
-                            screen_shake = 5 # Yere düştüğünde hafif sarsıntı
-                            spawn_particles(player.centerx, player.bottom, (200, 200, 200), 10, 3, 3) # Düşüş tozu
+                            screen_shake = 5 
+                            spawn_particles(player.centerx, player.bottom, (200, 200, 200), 10, 3, 3) 
                             
                         for m_data in current_moving_data:
                             if i == m_data['idx']:
@@ -558,12 +554,12 @@ while running:
                     coins.remove(coin)
                     score += 1
                     if coin_sound: coin_sound.play()
-                    spawn_particles(coin.centerx, coin.centery, (245, 197, 66), 15, 5, 4) # Altın toplama efekti
+                    spawn_particles(coin.centerx, coin.centery, (245, 197, 66), 15, 5, 4)
                     break
 
             if player.top > 500:
                 game_over = True
-                screen_shake = 20 # Ölümde güçlü sarsıntı
+                screen_shake = 20 
                 finish_time = current_time
                 try: pygame.mixer.music.stop()
                 except: pass
@@ -601,7 +597,7 @@ while running:
             cam_x += (target_cam_x - cam_x) * 0.1
             cam_y += (target_cam_y - cam_y) * 0.1
 
-            # Sreen Shake Uygulaması
+            
             shake_x = random.randint(-screen_shake, screen_shake) if screen_shake > 0 else 0
             shake_y = random.randint(-screen_shake, screen_shake) if screen_shake > 0 else 0
             draw_ox = int(cam_x) + shake_x
@@ -665,7 +661,7 @@ while running:
                 # Altın ışıması
                 pygame.draw.ellipse(screen, (255, 255, 150), (coin.x - draw_ox + 4, coin.y - draw_oy + 4, coin.width - 8, coin.height - 8))
             
-            # Ghost Trails (Dash İzleri)
+  
             for trail in ghost_trails[:]:
                 if has_sprites:
                     trail_sprite = run_frames[trail["frame"]] if "run" in str(run_frames) else idle_frames[0]
@@ -706,7 +702,6 @@ while running:
             else:
                 pygame.draw.rect(screen, (80, 170, 230), (player.x - draw_ox, player.y - draw_oy, player.width, player.height))
             
-            # PARÇACIK SİSTEMİ ÇİZİMİ VE GÜNCELLEMESİ
             for p in particles[:]:
                 p.x += p.vx
                 p.y += p.vy
@@ -719,11 +714,9 @@ while running:
                     pygame.draw.circle(surf, p_color, (p.size//2, p.size//2), p.size//2)
                     screen.blit(surf, (int(p.x) - draw_ox, int(p.y) - draw_oy))
 
-            # UI Barları Geliştirildi
             top_bar_y = 10
             ui_text_color = (240, 240, 240)
-            
-            # Dash Bar
+     
             pygame.draw.rect(screen, (50, 50, 50), (10, 45, 100, 10))
             if dash_cooldown == 0: pygame.draw.rect(screen, (100, 200, 255), (10, 45, 100, 10))
             else: pygame.draw.rect(screen, (100, 100, 100), (10, 45, int(100 * (1 - dash_cooldown/40)), 10))
