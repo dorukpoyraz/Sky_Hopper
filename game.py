@@ -7,7 +7,6 @@ screen = pygame.display.set_mode((700, 500))
 pygame.display.set_caption("Sky Hopper")
 clock = pygame.time.Clock()
 
-# --- KAMERA VE DURUM DEĞİŞKENLERİ ---
 cam_x = 0
 cam_y = 0
 
@@ -17,16 +16,14 @@ is_running_sound_playing = False
 transition_state = 0
 transition_alpha = 0
 
-# --- YENİ: AYARLAR (SETTINGS) DEĞİŞKENLERİ ---
 in_settings = False
 music_volume = 1.0
-jump_volume = 0.5  # Slider'da %50 olarak başlayacak
+jump_volume = 0.5  
 dragging_music = False
 dragging_jump = False
 slider_x = 200
 slider_width = 300
 
-# Menü Butonları (Event loop içinde erişebilmek için boş tanımlıyoruz)
 start_button_rect = pygame.Rect(0, 0, 0, 0)
 settings_button_rect = pygame.Rect(0, 0, 0, 0)
 back_button_rect = pygame.Rect(0, 0, 0, 0)
@@ -135,7 +132,7 @@ level_4_platforms = [pygame.Rect(0, 470, 150, 30), pygame.Rect(150, 380, 80, 20)
 level_4_coins = [pygame.Rect(180, 345, 16, 16), pygame.Rect(330, 345, 16, 16), pygame.Rect(580, 265, 16, 16), pygame.Rect(142, 74, 16, 16)]
 level_5_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(120, 370, 60, 20), pygame.Rect(30, 270, 60, 20), pygame.Rect(200, 180, 60, 20), pygame.Rect(400, 180, 100, 20), pygame.Rect(600, 100, 80, 20), pygame.Rect(356.5, 295, 73, 20)]
 level_5_coins = [pygame.Rect(140, 335, 16, 16), pygame.Rect(50, 235, 16, 16), pygame.Rect(220, 145, 16, 16), pygame.Rect(632, 74, 16, 16)]
-level_6_platforms = [pygame.Rect(0, 470, 173, 70), pygame.Rect(150, 400, 50, 20), pygame.Rect(300, 330, 110, 20), pygame.Rect(550, 260, 50, 20), pygame.Rect(300, 160, 119, 20), pygame.Rect(35.4, 100, 95, 20)]
+level_6_platforms = [pygame.Rect(0, 470, 173, 16.5), pygame.Rect(150, 400, 50, 20), pygame.Rect(300, 330, 110, 20), pygame.Rect(550, 260, 50, 20), pygame.Rect(300, 160, 119, 20), pygame.Rect(35.4, 100, 95, 20)]
 level_6_coins = [pygame.Rect(165, 365, 16, 16), pygame.Rect(565, 225, 16, 16), pygame.Rect(330, 125, 16, 16), pygame.Rect(72, 74, 16, 16)]
 level_7_platforms = [pygame.Rect(0, 470, 120, 30), pygame.Rect(180, 400, 60, 20), pygame.Rect(350, 330, 60, 20), pygame.Rect(520, 260, 60, 20), pygame.Rect(350, 180, 60, 20), pygame.Rect(152.5, 100, 100, 20)]
 level_7_coins = [pygame.Rect(202, 365, 16, 16), pygame.Rect(542, 225, 16, 16), pygame.Rect(372, 145, 16, 16), pygame.Rect(192, 76, 16, 16)]
@@ -255,6 +252,17 @@ except pygame.error:
 
 stars = [(random.randint(0, 700), random.randint(0, 500), random.randint(1, 3)) for _ in range(60)]
 
+bg_planets = [
+    {"x": 50, "y": 400, "r": 180, "color": (45, 50, 75), "border": 2, "scroll": 0.2},
+    {"x": 600, "y": 100, "r": 40, "color": (60, 45, 65), "border": 1, "scroll": 0.5},
+    {"x": 550, "y": 380, "r": 80, "color": (35, 45, 60), "border": 1, "scroll": 0.3}
+]
+
+bg_orbits = [
+    {"cx": 600, "cy": 100, "rx": 90, "ry": 25, "color": (80, 80, 100, 100), "scroll": 0.5},
+    {"cx": 550, "cy": 380, "rx": 160, "ry": 40, "color": (70, 75, 90, 80), "scroll": 0.3}
+]
+
 try:
     pygame.mixer.init()  
     jump_sound = pygame.mixer.Sound("jumpsound.wav")
@@ -289,10 +297,8 @@ reset_game()
 
 running = True
 while running:
-    # --- MENÜ SİSTEMİ ---
     if not game_started:
         if not in_settings:
-            # ANA MENÜ
             screen.fill((30, 34, 56)) 
             for star in stars:
                 pygame.draw.circle(screen, (255, 255, 255), (star[0], star[1]), star[2])
@@ -300,7 +306,6 @@ while running:
             title_text = title_font.render("SKY HOPPER", True, (245, 197, 66))
             screen.blit(title_text, (350 - title_text.get_width() // 2, 100))
             
-            # Start Butonu
             btn_width, btn_height = 240, 60
             btn_x, btn_y = 350 - btn_width // 2, 220
             start_button_rect = pygame.Rect(btn_x, btn_y, btn_width, btn_height)
@@ -316,7 +321,6 @@ while running:
             btn_text = font.render("START GAME", True, text_color)
             screen.blit(btn_text, (btn_x + (btn_width - btn_text.get_width()) // 2, btn_y + (btn_height - btn_text.get_height()) // 2))
 
-            # Settings Butonu
             settings_btn_y = btn_y + 80
             settings_button_rect = pygame.Rect(btn_x, settings_btn_y, btn_width, btn_height)
             
@@ -331,12 +335,10 @@ while running:
             screen.blit(s_btn_text, (btn_x + (btn_width - s_btn_text.get_width()) // 2, settings_btn_y + (btn_height - s_btn_text.get_height()) // 2))
             
         else:
-            # AYARLAR MENÜSÜ
             screen.fill((30, 34, 56)) 
             for star in stars:
                 pygame.draw.circle(screen, (255, 255, 255), (star[0], star[1]), star[2])
                 
-            # Menü Arkaplanı
             box_w, box_h = 500, 420
             box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
             pygame.draw.rect(screen, (10, 10, 20), (box_x - 5, box_y - 5, box_w + 10, box_h + 10), border_radius=15)
@@ -347,7 +349,6 @@ while running:
 
             slider_height = 8
 
-            # --- MUSIC SOUND ---
             music_text = font.render(f"MUSIC SOUND: %{int(music_volume * 100)}", True, (240, 240, 240))
             screen.blit(music_text, (350 - music_text.get_width() // 2, box_y + 110))
             
@@ -358,7 +359,6 @@ while running:
             pygame.draw.rect(screen, (245, 197, 66), (slider_x, music_slider_y, int(slider_width * music_volume), slider_height), border_radius=4)
             pygame.draw.circle(screen, (255, 255, 255), (slider_x + int(slider_width * music_volume), music_slider_y + slider_height // 2), 12)
 
-            # --- JUMP SOUND ---
             jump_text = font.render(f"JUMP SOUND: %{int(jump_volume * 100)}", True, (240, 240, 240))
             screen.blit(jump_text, (350 - jump_text.get_width() // 2, box_y + 210))
             
@@ -369,7 +369,6 @@ while running:
             pygame.draw.rect(screen, (60, 180, 120), (slider_x, jump_slider_y, int(slider_width * jump_volume), slider_height), border_radius=4)
             pygame.draw.circle(screen, (255, 255, 255), (slider_x + int(slider_width * jump_volume), jump_slider_y + slider_height // 2), 12)
 
-            # --- BACK BUTONU ---
             back_w, back_h = 160, 50
             back_x, back_y = 350 - back_w // 2, box_y + 340
             back_button_rect = pygame.Rect(back_x, back_y, back_w, back_h)
@@ -386,7 +385,6 @@ while running:
             screen.blit(back_text, (back_x + (back_w - back_text.get_width()) // 2, back_y + (back_h - back_text.get_height()) // 2))
 
     else:
-        # --- OYUN İÇİ MANTIK ---
         if not game_won and not game_over:
             current_time = (pygame.time.get_ticks() - start_time) / 1000
 
@@ -452,7 +450,6 @@ while running:
                     space_pressed = False 
             else:
                 space_pressed = False 
-                # !!! YAPTIĞIMIZ LEVEL 5 DÜZELTMESİ (SADECE EKRAN KARARIRKEN) !!!
                 if not game_over and not game_won and (is_door_opening or transition_state == 1):
                     merkez_farki = door_rect.centerx - player.centerx
                     
@@ -572,7 +569,6 @@ while running:
             draw_ox = int(cam_x)
             draw_oy = int(cam_y)
 
-        # --- ÇİZİM İŞLEMLERİ ---
         if game_won or game_over:
             screen.fill((30, 34, 56))
             end_box_width, end_box_height = 400, 320
@@ -602,8 +598,22 @@ while running:
         else:
             screen.fill((30, 34, 56))
             
+            for planet in bg_planets:
+                p_draw_x = int(planet["x"] - (draw_ox * planet["scroll"]))
+                p_draw_y = int(planet["y"] - (draw_oy * planet["scroll"]))
+                pygame.draw.circle(screen, planet["color"], (p_draw_x, p_draw_y), planet["r"], planet["border"])
+            
+            for orbit in bg_orbits:
+                o_draw_x = int(orbit["cx"] - (draw_ox * orbit["scroll"]))
+                o_draw_y = int(orbit["cy"] - (draw_oy * orbit["scroll"]))
+                orbit_surface = pygame.Surface((orbit["rx"]*2, orbit["ry"]*2), pygame.SRCALPHA)
+                pygame.draw.ellipse(orbit_surface, orbit["color"], (0, 0, orbit["rx"]*2, orbit["ry"]*2), 1)
+                screen.blit(orbit_surface, (o_draw_x - orbit["rx"], o_draw_y - orbit["ry"]))
+
             for star in stars:
-                pygame.draw.circle(screen, (255, 255, 255), (star[0], star[1]), star[2])
+                s_draw_x = int(star[0] - (draw_ox * 0.1)) % 700
+                s_draw_y = int(star[1] - (draw_oy * 0.1)) % 500
+                pygame.draw.circle(screen, (255, 255, 255), (s_draw_x, s_draw_y), star[2])
             
             if door_frames:
                 screen.blit(door_frames[door_anim_index], (door_rect.x - draw_ox, door_rect.y - draw_oy))
@@ -627,7 +637,6 @@ while running:
                         screen.blit(scaled_img, (p.x - draw_ox, p.y - draw_oy))
                     else:
                         pygame.draw.rect(screen, (90, 120, 90), (p.x - draw_ox, p.y - draw_oy, p.width, p.height))
-                
             for coin in coins:
                 pygame.draw.ellipse(screen, (245, 197, 66), (coin.x - draw_ox, coin.y - draw_oy, coin.width, coin.height))
                 
@@ -690,43 +699,47 @@ while running:
                 transition_alpha = 0
                 transition_state = 0
     
-    # --- YENİ EKLENEN EVENT (Tıklama/Klavye) DÖNGÜSÜ KISMI ---
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
             
-        if not game_started:
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r and (game_won or game_over):
+                reset_game()
+                
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            if not game_started:
                 if not in_settings:
-                    if start_button_rect.collidepoint(event.pos):
+                    if start_button_rect.collidepoint(mouse_pos):
                         game_started = True
                         reset_game()
-                    elif settings_button_rect.collidepoint(event.pos):
+                    elif settings_button_rect.collidepoint(mouse_pos):
                         in_settings = True
                 else:
-                    if back_button_rect.collidepoint(event.pos):
+                    if back_button_rect.collidepoint(mouse_pos):
                         in_settings = False
-                    elif music_slider_rect.collidepoint(event.pos):
+                    
+                    if music_slider_rect.collidepoint(mouse_pos):
                         dragging_music = True
-                    elif jump_slider_rect.collidepoint(event.pos):
+                    elif jump_slider_rect.collidepoint(mouse_pos):
                         dragging_jump = True
-                        
-            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                dragging_music = False
-                dragging_jump = False
-                
-            elif event.type == pygame.MOUSEMOTION:
-                if dragging_music:
-                    music_volume = max(0.0, min(1.0, (event.pos[0] - slider_x) / slider_width))
-                    try: pygame.mixer.music.set_volume(music_volume)
-                    except: pass
-                if dragging_jump:
-                    jump_volume = max(0.0, min(1.0, (event.pos[0] - slider_x) / slider_width))
-                    if jump_sound: jump_sound.set_volume(jump_volume * 0.3)
 
-        else:
-            if (game_won or game_over) and event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                reset_game()
+        if event.type == pygame.MOUSEBUTTONUP:
+            dragging_music = False
+            dragging_jump = False
+            
+        if event.type == pygame.MOUSEMOTION:
+            mouse_pos = pygame.mouse.get_pos()
+            if dragging_music:
+                new_vol = (mouse_pos[0] - slider_x) / slider_width
+                music_volume = max(0.0, min(1.0, new_vol))
+                try: pygame.mixer.music.set_volume(music_volume)
+                except: pass
+            if dragging_jump:
+                new_vol = (mouse_pos[0] - slider_x) / slider_width
+                jump_volume = max(0.0, min(1.0, new_vol))
+                if jump_sound: jump_sound.set_volume(jump_volume * 0.3)
 
     pygame.display.flip()
     clock.tick(60)
