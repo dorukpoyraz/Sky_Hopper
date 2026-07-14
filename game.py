@@ -1,6 +1,7 @@
 import pygame
 import random
 import copy
+import math
 
 pygame.init()
 screen = pygame.display.set_mode((700, 500))
@@ -9,13 +10,10 @@ clock = pygame.time.Clock()
 
 cam_x = 0
 cam_y = 0
-
 game_started = False  
 is_running_sound_playing = False
-
 transition_state = 0
 transition_alpha = 0
-
 in_settings = False
 music_volume = 1.0
 jump_volume = 0.5  
@@ -24,15 +22,12 @@ dragging_jump = False
 slider_x = 200
 slider_width = 300
 
-
 start_button_rect = pygame.Rect(0, 0, 0, 0)
 settings_button_rect = pygame.Rect(0, 0, 0, 0)
 exit_button_rect = pygame.Rect(0, 0, 0, 0)       
 back_button_rect = pygame.Rect(0, 0, 0, 0)
 music_slider_rect = pygame.Rect(0, 0, 0, 0)
 jump_slider_rect = pygame.Rect(0, 0, 0, 0)
-
-
 play_again_btn_rect = pygame.Rect(0, 0, 0, 0)
 menu_btn_rect = pygame.Rect(0, 0, 0, 0)
 
@@ -58,21 +53,18 @@ except:
 door_frames = []
 try:
     door_sheet = pygame.image.load("spacedoor3.png").convert_alpha()
-    
     content_rect = door_sheet.get_bounding_rect() 
     cropped_sheet = door_sheet.subsurface(content_rect)
-    
     sheet_w, sheet_h = cropped_sheet.get_size()
     frame_w = sheet_w // 4  
     frame_h = sheet_h
-    
     for i in range(4):
         rect = pygame.Rect(i * frame_w, 0, frame_w, frame_h)
         frame_img = cropped_sheet.subsurface(rect).copy()
         frame_img = pygame.transform.scale(frame_img, (80, 80))
         door_frames.append(frame_img)
 except Exception as e:
-    print("Kapı animasyonu yüklenemedi:", e)
+    pass
 
 target_w = 42
 target_h = 46
@@ -84,7 +76,6 @@ on_ground = False
 platform_speed = 2
 can_double_jump = False  
 space_pressed = False    
-
 facing_right = True
 animation_frame = 0
 animation_timer = 0
@@ -110,18 +101,14 @@ try:
     sheet_w, sheet_h = sprite_sheet.get_size()
     col_count, row_count = 4, 4
     cell_w, cell_h = sheet_w // col_count, sheet_h // row_count
-    
     crop_x_offset, crop_y_offset = int(cell_w * 0.05), int(cell_h * 0.05)
     crop_w, crop_h = int(cell_w * 0.9), int(cell_h * 0.9)
-    
     idle_frames = [get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 0 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h) for i in range(4)]
-    
     run_frames = []
     for i in range(4):
         img = get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 1 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h)
         if i == 3: img = pygame.transform.flip(img, True, False)
         run_frames.append(img)
-        
     back_frames = list(run_frames) 
     jump_frames = [get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 2 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h) for i in range(4)]
     has_sprites = True
@@ -186,10 +173,8 @@ def load_level(level_num):
     global platforms, coins, current_moving_data, player, vel_y, door_rect
     global is_door_opening, door_anim_index
     global cam_x, cam_y
-    
     is_door_opening = False
     door_anim_index = 3  
-
     level_data = {
         1: (level_1_platforms, level_1_coins), 2: (level_2_platforms, level_2_coins),
         3: (level_3_platforms, level_3_coins), 4: (level_4_platforms, level_4_coins),
@@ -197,20 +182,16 @@ def load_level(level_num):
         7: (level_7_platforms, level_7_coins), 8: (level_8_platforms, level_8_coins),
         9: (level_9_platforms, level_9_coins), 10: (level_10_platforms, level_10_coins)
     }
-    
     platforms = [pygame.Rect(p) for p in level_data[level_num][0]]
     coins = [pygame.Rect(c) for c in level_data[level_num][1]]
     current_moving_data = copy.deepcopy(level_moving_data[level_num])
-    
     player.x = 60
     player.y = 260
     vel_y = 0
-
     cam_x = player.centerx - 350
     cam_y = player.centery - 250
     cam_x = max(-80, min(80, cam_x))
     cam_y = max(-80, min(80, cam_y))
-
     if level_num == 10:
         door_rect.x = 520  
         door_rect.y = 200  
@@ -224,7 +205,6 @@ def reset_game():
     global is_running_sound_playing
     global transition_state, transition_alpha
     global cam_x, cam_y
-    
     current_level = 1
     score = 0
     start_time = pygame.time.get_ticks()
@@ -232,17 +212,13 @@ def reset_game():
     game_over = False
     transition_state = 0
     transition_alpha = 0
-    
     cam_x = 0
     cam_y = 0
-    
     if 'run_sound' in globals() and run_sound:
         run_sound.stop()
     is_running_sound_playing = False
-    
     if 'game_over_sound' in globals() and game_over_sound:
         game_over_sound.stop()
-    
     load_level(current_level)
     try:
         pygame.mixer.music.play(-1) 
@@ -255,6 +231,13 @@ try:
 except pygame.error:
     font = pygame.font.SysFont(None, 30)
     title_font = pygame.font.SysFont(None, 60)
+
+shooting_stars = []
+nebulas = [
+    {"x": 150, "y": 150, "color": (100, 50, 150), "radius": 180},
+    {"x": 550, "y": 350, "color": (50, 100, 200), "radius": 220},
+    {"x": 350, "y": 100, "color": (150, 50, 100), "radius": 150}
+]
 
 stars = [(random.randint(0, 700), random.randint(0, 500), random.randint(1, 3)) for _ in range(60)]
 
@@ -269,6 +252,68 @@ bg_orbits = [
     {"cx": 550, "cy": 380, "rx": 160, "ry": 40, "color": (70, 75, 90, 80), "scroll": 0.3}
 ]
 
+def draw_cosmic_background(screen, draw_ox=0, draw_oy=0, menu_mode=False):
+    screen.fill((15, 18, 36))
+    for neb in nebulas:
+        scroll_factor = 0.05 if not menu_mode else 0.01
+        nx = neb["x"] - (draw_ox * scroll_factor)
+        ny = neb["y"] - (draw_oy * scroll_factor)
+        neb_surf = pygame.Surface((neb["radius"] * 2, neb["radius"] * 2), pygame.SRCALPHA)
+        for r in range(neb["radius"], 0, -12):
+            alpha = int((1 - r / neb["radius"]) * 35)
+            color_with_alpha = neb["color"] + (alpha,)
+            pygame.draw.circle(neb_surf, color_with_alpha, (neb["radius"], neb["radius"]), r)
+        screen.blit(neb_surf, (int(nx - neb["radius"]), int(ny - neb["radius"])))
+
+    bg_timer = pygame.time.get_ticks() * 0.005
+    for i, star in enumerate(stars):
+        scroll_factor = 0.1 if not menu_mode else 0.02
+        s_draw_x = int(star[0] - (draw_ox * scroll_factor)) % 700
+        s_draw_y = int(star[1] - (draw_oy * scroll_factor)) % 500
+        twinkle = math.sin(bg_timer + i) * 0.8
+        r = max(1, star[2] + twinkle)
+        pygame.draw.circle(screen, (255, 255, 255), (s_draw_x, s_draw_y), int(r))
+
+    if random.random() < 0.008:
+        shooting_stars.append({
+            "x": random.randint(-50, 600),
+            "y": random.randint(-50, 200),
+            "speed_x": random.uniform(6, 10),
+            "speed_y": random.uniform(3, 5),
+            "length": random.randint(30, 60),
+            "alpha": 255
+        })
+
+    for s_star in shooting_stars[:]:
+        s_star["x"] += s_star["speed_x"]
+        s_star["y"] += s_star["speed_y"]
+        s_star["alpha"] -= 6 
+        if s_star["alpha"] <= 0 or s_star["x"] > 750 or s_star["y"] > 550:
+            shooting_stars.remove(s_star)
+            continue
+        star_surf = pygame.Surface((700, 500), pygame.SRCALPHA)
+        pygame.draw.line(star_surf, (255, 255, 200, s_star["alpha"]), 
+                         (int(s_star["x"]), int(s_star["y"])), 
+                         (int(s_star["x"] - s_star["length"]), int(s_star["y"] - s_star["length"] * 0.5)), 2)
+        screen.blit(star_surf, (0, 0))
+
+    for orbit in bg_orbits:
+        scroll_factor = orbit["scroll"] if not menu_mode else 0.02
+        o_draw_x = int(orbit["cx"] - (draw_ox * scroll_factor))
+        o_draw_y = int(orbit["cy"] - (draw_oy * scroll_factor))
+        orbit_surface = pygame.Surface((orbit["rx"] * 2, orbit["ry"] * 2), pygame.SRCALPHA)
+        pygame.draw.ellipse(orbit_surface, orbit["color"], (0, 0, orbit["rx"] * 2, orbit["ry"] * 2), 1)
+        screen.blit(orbit_surface, (o_draw_x - orbit["rx"], o_draw_y - orbit["ry"]))
+
+    planet_timer = pygame.time.get_ticks() * 0.001
+    for i, planet in enumerate(bg_planets):
+        scroll_factor = planet["scroll"] if not menu_mode else 0.03
+        wave_x = math.sin(planet_timer + i) * 8
+        wave_y = math.cos(planet_timer * 0.8 + i) * 6
+        p_draw_x = int((planet["x"] + wave_x) - (draw_ox * scroll_factor))
+        p_draw_y = int((planet["y"] + wave_y) - (draw_oy * scroll_factor))
+        pygame.draw.circle(screen, planet["color"], (p_draw_x, p_draw_y), planet["r"], planet["border"])
+
 try:
     pygame.mixer.init()  
     jump_sound = pygame.mixer.Sound("jumpsound.wav")
@@ -279,10 +324,8 @@ try:
     door_sound.set_volume(0.8)
     run_sound = pygame.mixer.Sound("runningmusic.wav")
     run_sound.set_volume(0.85)
-    
     game_over_sound = pygame.mixer.Sound("gameoversound.mp3")
     game_over_sound.set_volume(0.67)
-    
     land_sound = pygame.mixer.Sound("landhit.mp3")
     land_sound.set_volume(0.79)
 except pygame.error:
@@ -307,10 +350,8 @@ while running:
     
     if not game_started:
         if not in_settings:
-            screen.fill((30, 34, 56)) 
-            for star in stars:
-                pygame.draw.circle(screen, (255, 255, 255), (star[0], star[1]), star[2])
-                
+            draw_cosmic_background(screen, menu_mode=True)
+            
             title_text = title_font.render("SKY HOPPER", True, (245, 197, 66))
             screen.blit(title_text, (350 - title_text.get_width() // 2, 70))
             
@@ -318,7 +359,6 @@ while running:
             btn_x, btn_y = 350 - btn_width // 2, 180
             start_button_rect = pygame.Rect(btn_x, btn_y, btn_width, btn_height)
             
-           
             if start_button_rect.collidepoint(mouse_pos):
                 button_color, text_color = (60, 180, 120), (255, 255, 255)
             else:
@@ -329,7 +369,6 @@ while running:
             btn_text = font.render("START GAME", True, text_color)
             screen.blit(btn_text, (btn_x + (btn_width - btn_text.get_width()) // 2, btn_y + (btn_height - btn_text.get_height()) // 2))
 
-        
             settings_btn_y = btn_y + 80
             settings_button_rect = pygame.Rect(btn_x, settings_btn_y, btn_width, btn_height)
             
@@ -343,7 +382,6 @@ while running:
             s_btn_text = font.render("SETTINGS", True, s_text_color)
             screen.blit(s_btn_text, (btn_x + (btn_width - s_btn_text.get_width()) // 2, settings_btn_y + (btn_height - s_btn_text.get_height()) // 2))
             
-            # --- EXIT BUTONU ---
             exit_btn_y = btn_y + 160
             exit_button_rect = pygame.Rect(btn_x, exit_btn_y, btn_width, btn_height)
             
@@ -358,10 +396,8 @@ while running:
             screen.blit(e_btn_text, (btn_x + (btn_width - e_btn_text.get_width()) // 2, exit_btn_y + (btn_height - e_btn_text.get_height()) // 2))
             
         else:
-            screen.fill((30, 34, 56)) 
-            for star in stars:
-                pygame.draw.circle(screen, (255, 255, 255), (star[0], star[1]), star[2])
-                
+            draw_cosmic_background(screen, menu_mode=True)
+            
             box_w, box_h = 500, 420
             box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
             pygame.draw.rect(screen, (10, 10, 20), (box_x - 5, box_y - 5, box_w + 10, box_h + 10), border_radius=15)
@@ -446,7 +482,6 @@ while running:
             is_moving = False
             moving_backwards = False
             keys = pygame.key.get_pressed()
-            
             can_move = not is_door_opening and transition_state == 0
             
             if can_move:
@@ -614,10 +649,8 @@ while running:
                 screen.blit(rendered_text, (end_box_x + (end_box_width - rendered_text.get_width()) // 2, text_y_offset))
                 text_y_offset += 40
             
-          
             eb_btn_w, eb_btn_h = 220, 50
             
-         
             play_again_x = end_box_x + (end_box_width - eb_btn_w) // 2
             play_again_y = end_box_y + 240
             play_again_btn_rect = pygame.Rect(play_again_x, play_again_y, eb_btn_w, eb_btn_h)
@@ -632,7 +665,6 @@ while running:
             pa_text = font.render("PLAY AGAIN", True, pa_text_color)
             screen.blit(pa_text, (play_again_x + (eb_btn_w - pa_text.get_width()) // 2, play_again_y + (eb_btn_h - pa_text.get_height()) // 2))
 
-            
             menu_x = end_box_x + (end_box_width - eb_btn_w) // 2
             menu_y = end_box_y + 310
             menu_btn_rect = pygame.Rect(menu_x, menu_y, eb_btn_w, eb_btn_h)
@@ -648,24 +680,7 @@ while running:
             screen.blit(mm_text, (menu_x + (eb_btn_w - mm_text.get_width()) // 2, menu_y + (eb_btn_h - mm_text.get_height()) // 2))
 
         else:
-            screen.fill((30, 34, 56))
-            
-            for planet in bg_planets:
-                p_draw_x = int(planet["x"] - (draw_ox * planet["scroll"]))
-                p_draw_y = int(planet["y"] - (draw_oy * planet["scroll"]))
-                pygame.draw.circle(screen, planet["color"], (p_draw_x, p_draw_y), planet["r"], planet["border"])
-            
-            for orbit in bg_orbits:
-                o_draw_x = int(orbit["cx"] - (draw_ox * orbit["scroll"]))
-                o_draw_y = int(orbit["cy"] - (draw_oy * orbit["scroll"]))
-                orbit_surface = pygame.Surface((orbit["rx"]*2, orbit["ry"]*2), pygame.SRCALPHA)
-                pygame.draw.ellipse(orbit_surface, orbit["color"], (0, 0, orbit["rx"]*2, orbit["ry"]*2), 1)
-                screen.blit(orbit_surface, (o_draw_x - orbit["rx"], o_draw_y - orbit["ry"]))
-
-            for star in stars:
-                s_draw_x = int(star[0] - (draw_ox * 0.1)) % 700
-                s_draw_y = int(star[1] - (draw_oy * 0.1)) % 500
-                pygame.draw.circle(screen, (255, 255, 255), (s_draw_x, s_draw_y), star[2])
+            draw_cosmic_background(screen, draw_ox, draw_oy, menu_mode=False)
             
             if door_frames:
                 screen.blit(door_frames[door_anim_index], (door_rect.x - draw_ox, door_rect.y - draw_oy))
@@ -751,7 +766,6 @@ while running:
                 transition_alpha = 0
                 transition_state = 0
     
-  
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -777,7 +791,6 @@ while running:
                     elif jump_slider_rect.collidepoint(mouse_pos):
                         dragging_jump = True
             else:
-       
                 if game_won or game_over:
                     if play_again_btn_rect.collidepoint(mouse_pos):
                         reset_game()
