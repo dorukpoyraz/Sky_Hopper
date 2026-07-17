@@ -8,6 +8,7 @@ screen = pygame.display.set_mode((700, 500))
 pygame.display.set_caption("Sky Hopper - Premium Edition")
 clock = pygame.time.Clock()
 
+# --- GLOBAL VARIABLES & STATES ---
 cam_x = 0
 cam_y = 0
 game_started = False  
@@ -15,6 +16,8 @@ is_running_sound_playing = False
 transition_state = 0
 transition_alpha = 0
 in_settings = False
+in_shop = False
+
 music_volume = 1.0
 jump_volume = 0.5  
 dragging_music = False
@@ -31,7 +34,12 @@ dash_duration = 0
 is_dashing = False
 dash_speed = 12
 
+total_score = 0 
+last_click_time = 0  # Cift tiklamalari onlemek icin eklendi
+
+# --- UI RECTS ---
 start_button_rect = pygame.Rect(0, 0, 0, 0)
+store_button_rect = pygame.Rect(0, 0, 0, 0)
 settings_button_rect = pygame.Rect(0, 0, 0, 0)
 exit_button_rect = pygame.Rect(0, 0, 0, 0)       
 back_button_rect = pygame.Rect(0, 0, 0, 0)
@@ -39,6 +47,26 @@ music_slider_rect = pygame.Rect(0, 0, 0, 0)
 jump_slider_rect = pygame.Rect(0, 0, 0, 0)
 play_again_btn_rect = pygame.Rect(0, 0, 0, 0)
 menu_btn_rect = pygame.Rect(0, 0, 0, 0)
+shop_skin_rects = {}
+
+# --- SHOP & SKIN SYSTEM ---
+current_skin = "Default"
+skins = {
+    "Default": "player_sheet2-2.png",
+    "Purple": "player_purple.png",
+    "Blue": "player_blue.png",
+    "Red": "player_red.png",
+    "Gray": "player_gray.png",
+    "Yellow": "player_yellow.png"
+}
+skin_colors = {
+    "Default": (245, 197, 66),
+    "Purple": (150, 50, 200),
+    "Blue": (50, 150, 255),
+    "Red": (220, 50, 50),
+    "Gray": (150, 150, 150),
+    "Yellow": (240, 220, 50)
+}
 
 try:
     raw_platform = pygame.image.load("platform.png").convert_alpha()
@@ -105,25 +133,43 @@ def get_clean_image(sheet, x, y, width, height, scale_w, scale_h):
         fallback = pygame.Surface((width, height), pygame.SRCALPHA)
         return pygame.transform.scale(fallback, (scale_w, scale_h))
 
-try:
-    sprite_sheet = pygame.image.load("player_sheet2-2.png").convert_alpha()
-    sheet_w, sheet_h = sprite_sheet.get_size()
-    col_count, row_count = 4, 4
-    cell_w, cell_h = sheet_w // col_count, sheet_h // row_count
-    crop_x_offset, crop_y_offset = int(cell_w * 0.05), int(cell_h * 0.05)
-    crop_w, crop_h = int(cell_w * 0.9), int(cell_h * 0.9)
-    idle_frames = [get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 0 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h) for i in range(4)]
-    run_frames = []
-    for i in range(4):
-        img = get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 1 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h)
-        if i == 3: img = pygame.transform.flip(img, True, False)
-        run_frames.append(img)
-    back_frames = list(run_frames) 
-    jump_frames = [get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 2 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h) for i in range(4)]
-    has_sprites = True
-except Exception as e:
-    has_sprites = False
+# Player Sprite Loading Function
+idle_frames = []
+run_frames = []
+back_frames = []
+jump_frames = []
+has_sprites = False
 
+def load_player_sprites(skin_name):
+    global idle_frames, run_frames, back_frames, jump_frames, has_sprites
+    try:
+        filename = skins.get(skin_name, "player_sheet2-2.png")
+        sprite_sheet = pygame.image.load(filename).convert_alpha()
+        sheet_w, sheet_h = sprite_sheet.get_size()
+        col_count, row_count = 4, 4
+        cell_w, cell_h = sheet_w // col_count, sheet_h // row_count
+        crop_x_offset, crop_y_offset = int(cell_w * 0.05), int(cell_h * 0.05)
+        crop_w, crop_h = int(cell_w * 0.9), int(cell_h * 0.9)
+        
+        idle_frames = [get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 0 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h) for i in range(4)]
+        
+        run_frames = []
+        for i in range(4):
+            img = get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 1 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h)
+            if i == 3: img = pygame.transform.flip(img, True, False)
+            run_frames.append(img)
+            
+        back_frames = list(run_frames) 
+        jump_frames = [get_clean_image(sprite_sheet, i * cell_w + crop_x_offset, 2 * cell_h + crop_y_offset, crop_w, crop_h, target_w, target_h) for i in range(4)]
+        has_sprites = True
+    except Exception as e:
+        print(f"Could not load skin {skin_name}: {e}")
+        has_sprites = False
+
+# Load default skin on startup
+load_player_sprites(current_skin)
+
+# --- LEVEL DATA ---
 level_1_platforms = [pygame.Rect(0, 470, 280, 30), pygame.Rect(420, 470, 280, 30), pygame.Rect(150, 380, 120, 20), pygame.Rect(340, 300, 120, 20), pygame.Rect(520, 220, 120, 20), pygame.Rect(260, 160, 100, 20)]
 level_1_coins = [pygame.Rect(200, 345, 16, 16), pygame.Rect(390, 265, 16, 16), pygame.Rect(560, 185, 16, 16), pygame.Rect(300, 130, 16, 16)]
 level_1_hazards = [] 
@@ -371,34 +417,46 @@ while running:
     mouse_pos = pygame.mouse.get_pos()
     
     if not game_started:
-        if not in_settings:
+        if not in_settings and not in_shop:
             draw_cosmic_background(screen, menu_mode=True)
             title_text = title_font.render("SKY HOPPER", True, (245, 197, 66))
-            screen.blit(title_text, (350 - title_text.get_width() // 2, 70))
-            btn_width, btn_height = 240, 60
-            btn_x, btn_y = 350 - btn_width // 2, 180
+            screen.blit(title_text, (350 - title_text.get_width() // 2, 60))
             
-            start_button_rect = pygame.Rect(btn_x, btn_y, btn_width, btn_height)
+            total_score_text = font.render(f"TOTAL SCORE: {total_score}", True, (255, 255, 255))
+            screen.blit(total_score_text, (350 - total_score_text.get_width() // 2, 125))
+
+            btn_width, btn_height = 240, 50 
+            btn_x = 350 - btn_width // 2
+            
+            start_button_rect = pygame.Rect(btn_x, 170, btn_width, btn_height)
             button_color, text_color = ((60, 180, 120), (255, 255, 255)) if start_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
-            pygame.draw.rect(screen, (245, 197, 66), (btn_x - 3, btn_y - 3, btn_width + 6, btn_height + 6), border_radius=10) 
+            pygame.draw.rect(screen, (245, 197, 66), (btn_x - 3, 170 - 3, btn_width + 6, btn_height + 6), border_radius=10) 
             pygame.draw.rect(screen, button_color, start_button_rect, border_radius=10)
             btn_text = font.render("START GAME", True, text_color)
-            screen.blit(btn_text, (btn_x + (btn_width - btn_text.get_width()) // 2, btn_y + (btn_height - btn_text.get_height()) // 2))
+            screen.blit(btn_text, (btn_x + (btn_width - btn_text.get_width()) // 2, 170 + (btn_height - btn_text.get_height()) // 2))
 
-            settings_button_rect = pygame.Rect(btn_x, btn_y + 80, btn_width, btn_height)
+            store_button_rect = pygame.Rect(btn_x, 240, btn_width, btn_height)
+            st_color, st_text_color = ((150, 50, 200), (255, 255, 255)) if store_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
+            pygame.draw.rect(screen, (245, 197, 66), (btn_x - 3, 240 - 3, btn_width + 6, btn_height + 6), border_radius=10)
+            pygame.draw.rect(screen, st_color, store_button_rect, border_radius=10)
+            st_btn_text = font.render("STORE", True, st_text_color)
+            screen.blit(st_btn_text, (btn_x + (btn_width - st_btn_text.get_width()) // 2, 240 + (btn_height - st_btn_text.get_height()) // 2))
+
+            settings_button_rect = pygame.Rect(btn_x, 310, btn_width, btn_height)
             s_button_color, s_text_color = ((180, 120, 60), (255, 255, 255)) if settings_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
-            pygame.draw.rect(screen, (245, 197, 66), (btn_x - 3, btn_y + 80 - 3, btn_width + 6, btn_height + 6), border_radius=10) 
+            pygame.draw.rect(screen, (245, 197, 66), (btn_x - 3, 310 - 3, btn_width + 6, btn_height + 6), border_radius=10) 
             pygame.draw.rect(screen, s_button_color, settings_button_rect, border_radius=10)
             s_btn_text = font.render("SETTINGS", True, s_text_color)
-            screen.blit(s_btn_text, (btn_x + (btn_width - s_btn_text.get_width()) // 2, btn_y + 80 + (btn_height - s_btn_text.get_height()) // 2))
+            screen.blit(s_btn_text, (btn_x + (btn_width - s_btn_text.get_width()) // 2, 310 + (btn_height - s_btn_text.get_height()) // 2))
             
-            exit_button_rect = pygame.Rect(btn_x, btn_y + 160, btn_width, btn_height)
+            exit_button_rect = pygame.Rect(btn_x, 380, btn_width, btn_height)
             e_button_color, e_text_color = ((200, 60, 60), (255, 255, 255)) if exit_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
-            pygame.draw.rect(screen, (245, 197, 66), (btn_x - 3, btn_y + 160 - 3, btn_width + 6, btn_height + 6), border_radius=10)
+            pygame.draw.rect(screen, (245, 197, 66), (btn_x - 3, 380 - 3, btn_width + 6, btn_height + 6), border_radius=10)
             pygame.draw.rect(screen, e_button_color, exit_button_rect, border_radius=10)
             e_btn_text = font.render("EXIT", True, e_text_color)
-            screen.blit(e_btn_text, (btn_x + (btn_width - e_btn_text.get_width()) // 2, btn_y + 160 + (btn_height - e_btn_text.get_height()) // 2))
-        else:
+            screen.blit(e_btn_text, (btn_x + (btn_width - e_btn_text.get_width()) // 2, 380 + (btn_height - e_btn_text.get_height()) // 2))
+            
+        elif in_settings:
             draw_cosmic_background(screen, menu_mode=True)
             box_w, box_h = 500, 420; box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
             pygame.draw.rect(screen, (10, 10, 20), (box_x - 5, box_y - 5, box_w + 10, box_h + 10), border_radius=15)
@@ -423,6 +481,49 @@ while running:
             pygame.draw.rect(screen, (245, 197, 66), (back_x - 3, back_y - 3, back_w + 6, back_h + 6), border_radius=10) 
             pygame.draw.rect(screen, b_color, back_button_rect, border_radius=10)
             back_text = font.render("BACK", True, b_text_color); screen.blit(back_text, (back_x + (back_w - back_text.get_width()) // 2, back_y + (back_h - back_text.get_height()) // 2))
+
+        elif in_shop:
+            draw_cosmic_background(screen, menu_mode=True)
+            box_w, box_h = 500, 420
+            box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
+            pygame.draw.rect(screen, (10, 10, 20), (box_x - 5, box_y - 5, box_w + 10, box_h + 10), border_radius=15)
+            pygame.draw.rect(screen, (40, 45, 70), (box_x, box_y, box_w, box_h), border_radius=15)
+            
+            shop_title = title_font.render("STORE - SKINS", True, (245, 197, 66))
+            screen.blit(shop_title, (350 - shop_title.get_width() // 2, box_y + 20))
+
+            start_y = box_y + 110
+            shop_skin_rects.clear()
+            
+            for i, (skin_name, color) in enumerate(skin_colors.items()):
+                row = i // 2
+                col = i % 2
+                s_x = box_x + 35 + col * 220
+                s_y = start_y + row * 70
+                
+                btn_rect = pygame.Rect(s_x, s_y, 200, 50)
+                shop_skin_rects[skin_name] = btn_rect
+                
+                is_hover = btn_rect.collidepoint(mouse_pos)
+                bg_color = color if is_hover else (30, 34, 56)
+                text_color = (255, 255, 255) if is_hover else color
+                
+                pygame.draw.rect(screen, color, (s_x - 2, s_y - 2, 204, 54), border_radius=8)
+                pygame.draw.rect(screen, bg_color, btn_rect, border_radius=8)
+                
+                if current_skin == skin_name:
+                    pygame.draw.rect(screen, (255, 255, 255), (s_x - 4, s_y - 4, 208, 58), 3, border_radius=10)
+                    
+                skin_text = font.render(skin_name, True, text_color)
+                screen.blit(skin_text, (s_x + (200 - skin_text.get_width()) // 2, s_y + (50 - skin_text.get_height()) // 2))
+
+            back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 340
+            back_button_rect = pygame.Rect(back_x, back_y, back_w, back_h)
+            b_color, b_text_color = ((200, 60, 60), (255, 255, 255)) if back_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
+            pygame.draw.rect(screen, (245, 197, 66), (back_x - 3, back_y - 3, back_w + 6, back_h + 6), border_radius=10) 
+            pygame.draw.rect(screen, b_color, back_button_rect, border_radius=10)
+            back_text = font.render("BACK", True, b_text_color)
+            screen.blit(back_text, (back_x + (back_w - back_text.get_width()) // 2, back_y + (back_h - back_text.get_height()) // 2))
 
     else:
         if not game_won and not game_over:
@@ -553,6 +654,7 @@ while running:
                 if player.colliderect(coin):
                     coins.remove(coin)
                     score += 1
+                    total_score += 1 
                     if coin_sound: coin_sound.play()
                     spawn_particles(coin.centerx, coin.centery, (245, 197, 66), 15, 5, 4)
                     break
@@ -596,7 +698,6 @@ while running:
 
             cam_x += (target_cam_x - cam_x) * 0.1
             cam_y += (target_cam_y - cam_y) * 0.1
-
             
             shake_x = random.randint(-screen_shake, screen_shake) if screen_shake > 0 else 0
             shake_y = random.randint(-screen_shake, screen_shake) if screen_shake > 0 else 0
@@ -616,7 +717,7 @@ while running:
             win_lose_text = title_font.render('YOU WIN!' if game_won else 'GAME OVER!', True, (120, 255, 160) if game_won else (255, 100, 100))
             screen.blit(win_lose_text, (end_box_x + (end_box_width - win_lose_text.get_width()) // 2, end_box_y + 30))
 
-            texts_to_show = [f'Time: {round(finish_time, 1)}s', f'Total Coins: {score}', f'Best: {round(best_time, 1)}s' if best_time > 0 else 'Best: --']
+            texts_to_show = [f'Time: {round(finish_time, 1)}s', f'Session Coins: {score}', f'Best: {round(best_time, 1)}s' if best_time > 0 else 'Best: --']
 
             text_y_offset = end_box_y + 110
             for info_text in texts_to_show:
@@ -658,10 +759,8 @@ while running:
                 
             for coin in coins:
                 pygame.draw.ellipse(screen, (245, 197, 66), (coin.x - draw_ox, coin.y - draw_oy, coin.width, coin.height))
-                # Altın ışıması
                 pygame.draw.ellipse(screen, (255, 255, 150), (coin.x - draw_ox + 4, coin.y - draw_oy + 4, coin.width - 8, coin.height - 8))
             
-  
             for trail in ghost_trails[:]:
                 if has_sprites:
                     trail_sprite = run_frames[trail["frame"]] if "run" in str(run_frames) else idle_frames[0]
@@ -746,23 +845,36 @@ while running:
                 transition_alpha = 0
                 transition_state = 0
     
+    # --- EVENT LOOP'TA CIFT TIKLAMA (DEBOUNCE) KONTROLU ---
     for event in pygame.event.get():
         if event.type == pygame.QUIT: running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_pos = pygame.mouse.get_pos()
-            if not game_started:
-                if not in_settings:
-                    if start_button_rect.collidepoint(mouse_pos): game_started = True; reset_game()
-                    elif settings_button_rect.collidepoint(mouse_pos): in_settings = True
-                    elif exit_button_rect.collidepoint(mouse_pos): running = False
+            click_time = pygame.time.get_ticks()
+            # 150 milisaniye icinde art arda gelen tiklamalari engelle
+            if click_time - last_click_time > 150: 
+                last_click_time = click_time
+                mouse_pos = pygame.mouse.get_pos()
+                
+                if not game_started:
+                    if not in_settings and not in_shop:
+                        if start_button_rect.collidepoint(mouse_pos): game_started = True; reset_game()
+                        elif store_button_rect.collidepoint(mouse_pos): in_shop = True
+                        elif settings_button_rect.collidepoint(mouse_pos): in_settings = True
+                        elif exit_button_rect.collidepoint(mouse_pos): running = False
+                    elif in_settings:
+                        if back_button_rect.collidepoint(mouse_pos): in_settings = False
+                        if music_slider_rect.collidepoint(mouse_pos): dragging_music = True
+                        elif jump_slider_rect.collidepoint(mouse_pos): dragging_jump = True
+                    elif in_shop:
+                        if back_button_rect.collidepoint(mouse_pos): in_shop = False
+                        for skin, rect in shop_skin_rects.items():
+                            if rect.collidepoint(mouse_pos):
+                                current_skin = skin
+                                load_player_sprites(skin)
                 else:
-                    if back_button_rect.collidepoint(mouse_pos): in_settings = False
-                    if music_slider_rect.collidepoint(mouse_pos): dragging_music = True
-                    elif jump_slider_rect.collidepoint(mouse_pos): dragging_jump = True
-            else:
-                if game_won or game_over:
-                    if play_again_btn_rect.collidepoint(mouse_pos): reset_game()
-                    elif menu_btn_rect.collidepoint(mouse_pos): game_started = False
+                    if game_won or game_over:
+                        if play_again_btn_rect.collidepoint(mouse_pos): reset_game()
+                        elif menu_btn_rect.collidepoint(mouse_pos): game_started = False
 
         if event.type == pygame.MOUSEBUTTONUP: dragging_music = dragging_jump = False
         if event.type == pygame.MOUSEMOTION:
