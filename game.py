@@ -17,9 +17,9 @@ transition_state = 0
 transition_alpha = 0
 in_settings = False
 in_shop = False
-in_level_select = False # YENİ: Seviye seçim ekranı durumu
+in_level_select = False 
 
-unlocked_levels = 1 # YENİ: Başlangıçta sadece 1. seviye açık
+unlocked_levels = 1 
 
 music_volume = 1.0
 jump_volume = 0.5  
@@ -51,7 +51,7 @@ jump_slider_rect = pygame.Rect(0, 0, 0, 0)
 play_again_btn_rect = pygame.Rect(0, 0, 0, 0)
 menu_btn_rect = pygame.Rect(0, 0, 0, 0)
 shop_skin_rects = {}
-level_rects = {} # YENİ: Seviye butonlarının çarpışma kutuları
+level_rects = {} 
 
 # --- SHOP & SKIN SYSTEM ---
 current_skin = "Default"
@@ -182,7 +182,7 @@ def load_player_sprites(skin_name):
 
 load_player_sprites(current_skin)
 
-# --- LEVEL DATA ---
+# --- LEVEL DATA 1-10 ---
 level_1_platforms = [pygame.Rect(0, 470, 280, 30), pygame.Rect(420, 470, 280, 30), pygame.Rect(150, 380, 120, 20), pygame.Rect(340, 300, 120, 20), pygame.Rect(520, 220, 120, 20), pygame.Rect(260, 160, 100, 20)]
 level_1_coins = [pygame.Rect(200, 345, 16, 16), pygame.Rect(390, 265, 16, 16), pygame.Rect(560, 185, 16, 16), pygame.Rect(300, 130, 16, 16)]
 level_1_hazards = [] 
@@ -223,6 +223,47 @@ level_10_platforms = [pygame.Rect(0, 470, 140, 30), pygame.Rect(150, 400, 40, 20
 level_10_coins = [pygame.Rect(162, 365, 16, 16), pygame.Rect(562, 245, 16, 16), pygame.Rect(522, 64, 16, 16)]
 level_10_hazards = []
 
+# --- LEVEL DATA 11-20 ---
+level_11_platforms = [pygame.Rect(0, 470, 120, 30), pygame.Rect(200, 400, 60, 20), pygame.Rect(400, 330, 60, 20), pygame.Rect(200, 250, 60, 20), pygame.Rect(400, 170, 60, 20), pygame.Rect(150, 80, 100, 20)]
+level_11_coins = [pygame.Rect(220, 360, 16, 16), pygame.Rect(420, 290, 16, 16), pygame.Rect(220, 210, 16, 16), pygame.Rect(190, 40, 16, 16)]
+level_11_hazards = []
+
+level_12_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(150, 400, 60, 20), pygame.Rect(350, 350, 80, 20), pygame.Rect(550, 300, 60, 20), pygame.Rect(350, 200, 80, 20), pygame.Rect(150, 100, 100, 20)]
+level_12_coins = [pygame.Rect(170, 360, 16, 16), pygame.Rect(570, 260, 16, 16), pygame.Rect(380, 160, 16, 16), pygame.Rect(190, 60, 16, 16)]
+level_12_hazards = []
+
+level_13_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(200, 420, 50, 20), pygame.Rect(400, 370, 50, 20), pygame.Rect(600, 320, 50, 20), pygame.Rect(400, 220, 50, 20), pygame.Rect(200, 120, 50, 20), pygame.Rect(50, 60, 80, 20)]
+level_13_coins = [pygame.Rect(215, 380, 16, 16), pygame.Rect(615, 280, 16, 16), pygame.Rect(415, 180, 16, 16), pygame.Rect(80, 20, 16, 16)]
+level_13_hazards = []
+
+level_14_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(150, 380, 40, 20), pygame.Rect(300, 380, 40, 20), pygame.Rect(450, 300, 40, 20), pygame.Rect(600, 220, 40, 20), pygame.Rect(400, 140, 40, 20), pygame.Rect(200, 90, 80, 20)]
+level_14_coins = [pygame.Rect(162, 340, 16, 16), pygame.Rect(462, 260, 16, 16), pygame.Rect(412, 100, 16, 16), pygame.Rect(230, 50, 16, 16)]
+level_14_hazards = []
+
+level_15_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(150, 400, 60, 20), pygame.Rect(350, 400, 60, 20), pygame.Rect(550, 350, 60, 20), pygame.Rect(350, 250, 60, 20), pygame.Rect(150, 150, 60, 20), pygame.Rect(350, 80, 80, 20)]
+level_15_coins = [pygame.Rect(170, 360, 16, 16), pygame.Rect(570, 310, 16, 16), pygame.Rect(170, 110, 16, 16), pygame.Rect(380, 40, 16, 16)]
+level_15_hazards = []
+
+level_16_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(120, 350, 50, 20), pygame.Rect(300, 280, 50, 20), pygame.Rect(500, 210, 50, 20), pygame.Rect(650, 140, 50, 20), pygame.Rect(400, 80, 80, 20)]
+level_16_coins = [pygame.Rect(135, 310, 16, 16), pygame.Rect(515, 170, 16, 16), pygame.Rect(430, 40, 16, 16)]
+level_16_hazards = []
+
+level_17_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(200, 400, 40, 20), pygame.Rect(400, 350, 40, 20), pygame.Rect(600, 300, 40, 20), pygame.Rect(400, 200, 40, 20), pygame.Rect(200, 100, 40, 20), pygame.Rect(50, 50, 60, 20)]
+level_17_coins = [pygame.Rect(212, 360, 16, 16), pygame.Rect(612, 260, 16, 16), pygame.Rect(212, 60, 16, 16), pygame.Rect(70, 10, 16, 16)]
+level_17_hazards = []
+
+level_18_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(150, 420, 60, 20), pygame.Rect(350, 360, 60, 20), pygame.Rect(550, 300, 60, 20), pygame.Rect(350, 220, 60, 20), pygame.Rect(150, 140, 60, 20), pygame.Rect(350, 60, 80, 20)]
+level_18_coins = [pygame.Rect(170, 380, 16, 16), pygame.Rect(570, 260, 16, 16), pygame.Rect(170, 100, 16, 16), pygame.Rect(380, 20, 16, 16)]
+level_18_hazards = []
+
+level_19_platforms = [pygame.Rect(0, 470, 60, 30), pygame.Rect(150, 380, 40, 20), pygame.Rect(350, 300, 40, 20), pygame.Rect(550, 220, 40, 20), pygame.Rect(350, 140, 40, 20), pygame.Rect(150, 80, 80, 20)]
+level_19_coins = [pygame.Rect(162, 340, 16, 16), pygame.Rect(562, 180, 16, 16), pygame.Rect(180, 40, 16, 16)]
+level_19_hazards = []
+
+level_20_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(150, 400, 50, 20), pygame.Rect(350, 350, 50, 20), pygame.Rect(550, 280, 50, 20), pygame.Rect(350, 200, 50, 20), pygame.Rect(500, 100, 90, 20)]
+level_20_coins = [pygame.Rect(167, 360, 16, 16), pygame.Rect(567, 240, 16, 16), pygame.Rect(535, 60, 16, 16)]
+level_20_hazards = []
+
 level_moving_data = {
     1: [{'idx': 5, 'dir': 1, 'min': 150, 'max': 450}],
     2: [{'idx': 3, 'dir': 1, 'min': 100, 'max': 400}],
@@ -233,7 +274,17 @@ level_moving_data = {
     7: [{'idx': 1, 'dir': 1, 'min': 150, 'max': 300}, {'idx': 3, 'dir': -1, 'min': 450, 'max': 650}],
     8: [{'idx': 1, 'dir': 1, 'min': 120, 'max': 250}, {'idx': 2, 'dir': -1, 'min': 280, 'max': 420}, {'idx': 3, 'dir': 1, 'min': 420, 'max': 580}],
     9: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 400}, {'idx': 4, 'dir': -1, 'min': 550, 'max': 650}, {'idx': 5, 'dir': 1, 'min': 350, 'max': 500}],
-    10: [{'idx': 1, 'dir': 1, 'min': 100, 'max': 250}, {'idx': 3, 'dir': -1, 'min': 450, 'max': 620}, {'idx': 5, 'dir': 1, 'min': 100, 'max': 250}]
+    10: [{'idx': 1, 'dir': 1, 'min': 100, 'max': 250}, {'idx': 3, 'dir': -1, 'min': 450, 'max': 620}, {'idx': 5, 'dir': 1, 'min': 100, 'max': 250}],
+    11: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}, {'idx': 4, 'dir': -1, 'min': 300, 'max': 500}],
+    12: [{'idx': 2, 'dir': 1, 'min': 200, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 200, 'max': 450}],
+    13: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}, {'idx': 4, 'dir': -1, 'min': 300, 'max': 500}],
+    14: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 400}, {'idx': 4, 'dir': -1, 'min': 500, 'max': 650}],
+    15: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
+    16: [{'idx': 2, 'dir': 1, 'min': 200, 'max': 400}, {'idx': 3, 'dir': -1, 'min': 400, 'max': 600}],
+    17: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}, {'idx': 4, 'dir': -1, 'min': 300, 'max': 500}],
+    18: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
+    19: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
+    20: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}]
 }
 
 current_level = 1
@@ -286,7 +337,12 @@ def load_level(level_num):
         3: (level_3_platforms, level_3_coins, level_3_hazards), 4: (level_4_platforms, level_4_coins, level_4_hazards),
         5: (level_5_platforms, level_5_coins, level_5_hazards), 6: (level_6_platforms, level_6_coins, level_6_hazards),
         7: (level_7_platforms, level_7_coins, level_7_hazards), 8: (level_8_platforms, level_8_coins, level_8_hazards),
-        9: (level_9_platforms, level_9_coins, level_9_hazards), 10: (level_10_platforms, level_10_coins, level_10_hazards)
+        9: (level_9_platforms, level_9_coins, level_9_hazards), 10: (level_10_platforms, level_10_coins, level_10_hazards),
+        11: (level_11_platforms, level_11_coins, level_11_hazards), 12: (level_12_platforms, level_12_coins, level_12_hazards),
+        13: (level_13_platforms, level_13_coins, level_13_hazards), 14: (level_14_platforms, level_14_coins, level_14_hazards),
+        15: (level_15_platforms, level_15_coins, level_15_hazards), 16: (level_16_platforms, level_16_coins, level_16_hazards),
+        17: (level_17_platforms, level_17_coins, level_17_hazards), 18: (level_18_platforms, level_18_coins, level_18_hazards),
+        19: (level_19_platforms, level_19_coins, level_19_hazards), 20: (level_20_platforms, level_20_coins, level_20_hazards)
     }
     platforms = [pygame.Rect(p) for p in level_data[level_num][0]]
     coins = [pygame.Rect(c) for c in level_data[level_num][1]]
@@ -299,7 +355,7 @@ def load_level(level_num):
     cam_x = player.centerx - 350
     cam_y = player.centery - 250
     
-    if level_num == 10:
+    if level_num == 20:
         door_rect.x = 520  
         door_rect.y = 200  
     elif coins:
@@ -313,7 +369,6 @@ def reset_game(starting_level=None):
     global transition_state, transition_alpha
     global cam_x, cam_y, screen_shake
     
-    # YENİ: Artık otomatik olarak Level 1'e atmayacak, kaldığı yerden veya seçilen yerden başlayacak
     if starting_level is not None:
         current_level = starting_level
 
@@ -475,34 +530,40 @@ while running:
             screen.blit(e_btn_text, (btn_x + (btn_width - e_btn_text.get_width()) // 2, 380 + (btn_height - e_btn_text.get_height()) // 2))
             
         elif in_level_select:
-            # YENİ EKLENEN KISIM: Seviye Seçim Ekranı (Harita Sistemi)
             draw_cosmic_background(screen, menu_mode=True)
             box_w, box_h = 620, 440; box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
+            
+            title = title_font.render("SELECT LEVEL", True, (245, 197, 66))
+            screen.blit(title, (350 - title.get_width() // 2, box_y - 65))
+
             pygame.draw.rect(screen, (10, 10, 20), (box_x - 5, box_y - 5, box_w + 10, box_h + 10), border_radius=15)
             pygame.draw.rect(screen, (40, 45, 70), (box_x, box_y, box_w, box_h), border_radius=15)
 
-            title = title_font.render("SELECT LEVEL", True, (245, 197, 66))
-            screen.blit(title, (350 - title.get_width() // 2, box_y + 15))
+            sec1_title = small_font.render("SECTION 1: THE NEBULA", True, (255, 255, 255))
+            screen.blit(sec1_title, (box_x + 30, box_y + 15))
 
-            sec1_title = font.render("SECTION 1: THE NEBULA", True, (255, 255, 255))
-            screen.blit(sec1_title, (box_x + 30, box_y + 75))
+            sec2_title = small_font.render("SECTION 2: DEEP SPACE", True, (255, 255, 255))
+            screen.blit(sec2_title, (box_x + 30, box_y + 185))
 
-            # Red Ball / Ateş ve Su tarzı harita noktaları (Zikzak Çiziyor)
             level_coords = {
-                1: (70, 150), 2: (170, 130), 3: (270, 160), 4: (370, 140), 5: (480, 170),
-                6: (530, 260), 7: (430, 290), 8: (320, 270), 9: (210, 300), 10: (100, 270)
+                # Section 1
+                1: (50, 70), 2: (140, 50), 3: (230, 70), 4: (320, 50), 5: (410, 70),
+                6: (500, 50), 7: (560, 100), 8: (480, 130), 9: (390, 100), 10: (300, 130),
+                
+                # Section 2
+                11: (50, 240), 12: (140, 220), 13: (230, 240), 14: (320, 220), 15: (410, 240),
+                16: (500, 220), 17: (560, 270), 18: (480, 300), 19: (390, 270), 20: (300, 300)
             }
 
-            # Haritadaki bağlantı yollarını (çizgilerini) çizme
-            for i in range(1, 10):
+            for i in range(1, 20):
+                if i == 10: continue 
                 x1, y1 = level_coords[i]
                 x2, y2 = level_coords[i+1]
-                # Kilidi açılmış level'ların yolu sarı yanar
                 line_color = (245, 197, 66) if i < unlocked_levels else (100, 100, 120)
                 pygame.draw.line(screen, line_color, (box_x + x1, box_y + y1), (box_x + x2, box_y + y2), 6)
 
             level_rects.clear()
-            for i in range(1, 11):
+            for i in range(1, 21):
                 cx, cy = box_x + level_coords[i][0], box_y + level_coords[i][1]
                 rect = pygame.Rect(cx - 26, cy - 26, 52, 52)
                 level_rects[i] = rect
@@ -512,15 +573,12 @@ while running:
 
                 if is_unlocked:
                     if i == unlocked_levels:
-                        # En son bulunduğun leveli belirgin yap
                         bg_color = (245, 197, 66) if is_hover else (200, 150, 40)
                         border_color = (255, 255, 255)
                     else:
-                        # Tamamladığın level'lar yeşil
                         bg_color = (60, 180, 120) if is_hover else (40, 140, 90)
                         border_color = (245, 197, 66)
                 else:
-                    # Kilitli level'lar gri
                     bg_color = (60, 60, 75)
                     border_color = (40, 40, 50)
 
@@ -528,19 +586,13 @@ while running:
                 pygame.draw.rect(screen, bg_color, rect, border_radius=26)
 
                 if is_unlocked:
-                    lvl_text = font.render(str(i), True, (255, 255, 255))
+                    lvl_text = small_font.render(str(i), True, (255, 255, 255))
                     screen.blit(lvl_text, (cx - lvl_text.get_width()//2, cy - lvl_text.get_height()//2))
                 else:
-                    # Kilit (Padlock) ikonu çizimi
                     pygame.draw.rect(screen, (200, 200, 200), (cx - 10, cy - 2, 20, 16), border_radius=3)
                     pygame.draw.circle(screen, (200, 200, 200), (cx, cy - 2), 8, 3)
 
-            # Section 2 göstermelik kısmı
-            sec2_title = font.render("SECTION 2: COMING SOON...", True, (150, 150, 160))
-            screen.blit(sec2_title, (box_x + 30, box_y + 340))
-
-            # Back Button
-            back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 375
+            back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 360
             back_button_rect = pygame.Rect(back_x, back_y, back_w, back_h)
             b_color, b_text_color = ((200, 60, 60), (255, 255, 255)) if back_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
             pygame.draw.rect(screen, (245, 197, 66), (back_x - 3, back_y - 3, back_w + 6, back_h + 6), border_radius=10)
@@ -785,8 +837,8 @@ while running:
                     else:
                         is_door_opening = False
                         door_anim_index = 3  
-                        if current_level < 10: transition_state = 1 
-                        elif current_level == 10:
+                        if current_level < 20: transition_state = 1 
+                        elif current_level == 20:
                             game_won = True
                             finish_time = current_time
                             if best_time == 0 or finish_time < best_time: best_time = finish_time
@@ -920,7 +972,7 @@ while running:
             ui_text_color = (240, 240, 240)
      
             screen.blit(font.render(f'Coins: {score}', True, ui_text_color), (10, top_bar_y))
-            screen.blit(font.render(f'Level: {current_level}/10', True, ui_text_color), (160, top_bar_y))
+            screen.blit(font.render(f'Level: {current_level}/20', True, ui_text_color), (160, top_bar_y))
             screen.blit(font.render(f'Time: {round(current_time, 1)}s', True, ui_text_color), (300, top_bar_y))
             if best_time > 0: screen.blit(font.render(f'Best: {round(best_time, 1)}s', True, (245, 197, 66)), (450, top_bar_y))
 
@@ -937,7 +989,6 @@ while running:
                 transition_state = 2 
                 current_level += 1
                 
-                # YENİ: Yeni levele geçince o leveli "açılmış" (unlocked) olarak kaydet.
                 if current_level > unlocked_levels:
                     unlocked_levels = current_level
                     
@@ -958,9 +1009,7 @@ while running:
                 mouse_pos = pygame.mouse.get_pos()
                 
                 if not game_started:
-                    # YENİ: in_level_select ile yeni ekran eklendi
                     if not in_settings and not in_shop and not in_level_select:
-                        # PLAY'e basınca artık oyunu direkt başlatmıyoruz, haritayı açıyoruz
                         if start_button_rect.collidepoint(mouse_pos): 
                             in_level_select = True
                         elif store_button_rect.collidepoint(mouse_pos): in_shop = True
@@ -971,7 +1020,6 @@ while running:
                         if back_button_rect.collidepoint(mouse_pos):
                             in_level_select = False
                         else:
-                            # Level'lardan birine tıklanırsa ve kilidi açıksa başlat
                             for lvl, rect in level_rects.items():
                                 if rect.collidepoint(mouse_pos) and lvl <= unlocked_levels:
                                     game_started = True
