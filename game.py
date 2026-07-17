@@ -17,6 +17,9 @@ transition_state = 0
 transition_alpha = 0
 in_settings = False
 in_shop = False
+in_level_select = False # YENİ: Seviye seçim ekranı durumu
+
+unlocked_levels = 1 # YENİ: Başlangıçta sadece 1. seviye açık
 
 music_volume = 1.0
 jump_volume = 0.5  
@@ -35,7 +38,7 @@ is_dashing = False
 dash_speed = 12
 
 total_score = 0 
-last_click_time = 0  # Cift tiklamalari onlemek icin eklendi
+last_click_time = 0  
 
 # --- UI RECTS ---
 start_button_rect = pygame.Rect(0, 0, 0, 0)
@@ -48,9 +51,21 @@ jump_slider_rect = pygame.Rect(0, 0, 0, 0)
 play_again_btn_rect = pygame.Rect(0, 0, 0, 0)
 menu_btn_rect = pygame.Rect(0, 0, 0, 0)
 shop_skin_rects = {}
+level_rects = {} # YENİ: Seviye butonlarının çarpışma kutuları
 
 # --- SHOP & SKIN SYSTEM ---
 current_skin = "Default"
+unlocked_skins = ["Default"] 
+
+skin_prices = {
+    "Default": 0,
+    "Purple": 10,
+    "Blue": 20,
+    "Red": 30,
+    "Gray": 40,
+    "Yellow": 50
+}
+
 skins = {
     "Default": "player_sheet2-2.png",
     "Purple": "player_purple.png",
@@ -133,7 +148,6 @@ def get_clean_image(sheet, x, y, width, height, scale_w, scale_h):
         fallback = pygame.Surface((width, height), pygame.SRCALPHA)
         return pygame.transform.scale(fallback, (scale_w, scale_h))
 
-# Player Sprite Loading Function
 idle_frames = []
 run_frames = []
 back_frames = []
@@ -166,7 +180,6 @@ def load_player_sprites(skin_name):
         print(f"Could not load skin {skin_name}: {e}")
         has_sprites = False
 
-# Load default skin on startup
 load_player_sprites(current_skin)
 
 # --- LEVEL DATA ---
@@ -294,13 +307,16 @@ def load_level(level_num):
         door_rect.centerx = highest_coin.centerx
         door_rect.centery = highest_coin.centery - 4  
 
-def reset_game():
+def reset_game(starting_level=None):
     global current_level, score, start_time, game_won, game_over
     global is_running_sound_playing
     global transition_state, transition_alpha
     global cam_x, cam_y, screen_shake
     
-    current_level = 1
+    # YENİ: Artık otomatik olarak Level 1'e atmayacak, kaldığı yerden veya seçilen yerden başlayacak
+    if starting_level is not None:
+        current_level = starting_level
+
     score = 0
     start_time = pygame.time.get_ticks()
     game_won = False
@@ -321,9 +337,11 @@ def reset_game():
 
 try:
     font = pygame.font.SysFont("Impact", 30)
+    small_font = pygame.font.SysFont("Impact", 20)
     title_font = pygame.font.SysFont("Impact", 60) 
 except pygame.error:
     font = pygame.font.SysFont(None, 30)
+    small_font = pygame.font.SysFont(None, 24)
     title_font = pygame.font.SysFont(None, 60)
 
 shooting_stars = []
@@ -410,14 +428,14 @@ except pygame.error:
 try: pygame.mixer.music.load("musicsound.mp3"); pygame.mixer.music.set_volume(music_volume)
 except: pass
 
-reset_game()
+reset_game(1)
 
 running = True
 while running:
     mouse_pos = pygame.mouse.get_pos()
     
     if not game_started:
-        if not in_settings and not in_shop:
+        if not in_settings and not in_shop and not in_level_select:
             draw_cosmic_background(screen, menu_mode=True)
             title_text = title_font.render("SKY HOPPER", True, (245, 197, 66))
             screen.blit(title_text, (350 - title_text.get_width() // 2, 60))
@@ -456,6 +474,80 @@ while running:
             e_btn_text = font.render("EXIT", True, e_text_color)
             screen.blit(e_btn_text, (btn_x + (btn_width - e_btn_text.get_width()) // 2, 380 + (btn_height - e_btn_text.get_height()) // 2))
             
+        elif in_level_select:
+            # YENİ EKLENEN KISIM: Seviye Seçim Ekranı (Harita Sistemi)
+            draw_cosmic_background(screen, menu_mode=True)
+            box_w, box_h = 620, 440; box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
+            pygame.draw.rect(screen, (10, 10, 20), (box_x - 5, box_y - 5, box_w + 10, box_h + 10), border_radius=15)
+            pygame.draw.rect(screen, (40, 45, 70), (box_x, box_y, box_w, box_h), border_radius=15)
+
+            title = title_font.render("SELECT LEVEL", True, (245, 197, 66))
+            screen.blit(title, (350 - title.get_width() // 2, box_y + 15))
+
+            sec1_title = font.render("SECTION 1: THE NEBULA", True, (255, 255, 255))
+            screen.blit(sec1_title, (box_x + 30, box_y + 75))
+
+            # Red Ball / Ateş ve Su tarzı harita noktaları (Zikzak Çiziyor)
+            level_coords = {
+                1: (70, 150), 2: (170, 130), 3: (270, 160), 4: (370, 140), 5: (480, 170),
+                6: (530, 260), 7: (430, 290), 8: (320, 270), 9: (210, 300), 10: (100, 270)
+            }
+
+            # Haritadaki bağlantı yollarını (çizgilerini) çizme
+            for i in range(1, 10):
+                x1, y1 = level_coords[i]
+                x2, y2 = level_coords[i+1]
+                # Kilidi açılmış level'ların yolu sarı yanar
+                line_color = (245, 197, 66) if i < unlocked_levels else (100, 100, 120)
+                pygame.draw.line(screen, line_color, (box_x + x1, box_y + y1), (box_x + x2, box_y + y2), 6)
+
+            level_rects.clear()
+            for i in range(1, 11):
+                cx, cy = box_x + level_coords[i][0], box_y + level_coords[i][1]
+                rect = pygame.Rect(cx - 26, cy - 26, 52, 52)
+                level_rects[i] = rect
+
+                is_hover = rect.collidepoint(mouse_pos)
+                is_unlocked = i <= unlocked_levels
+
+                if is_unlocked:
+                    if i == unlocked_levels:
+                        # En son bulunduğun leveli belirgin yap
+                        bg_color = (245, 197, 66) if is_hover else (200, 150, 40)
+                        border_color = (255, 255, 255)
+                    else:
+                        # Tamamladığın level'lar yeşil
+                        bg_color = (60, 180, 120) if is_hover else (40, 140, 90)
+                        border_color = (245, 197, 66)
+                else:
+                    # Kilitli level'lar gri
+                    bg_color = (60, 60, 75)
+                    border_color = (40, 40, 50)
+
+                pygame.draw.rect(screen, border_color, (cx - 29, cy - 29, 58, 58), border_radius=29) 
+                pygame.draw.rect(screen, bg_color, rect, border_radius=26)
+
+                if is_unlocked:
+                    lvl_text = font.render(str(i), True, (255, 255, 255))
+                    screen.blit(lvl_text, (cx - lvl_text.get_width()//2, cy - lvl_text.get_height()//2))
+                else:
+                    # Kilit (Padlock) ikonu çizimi
+                    pygame.draw.rect(screen, (200, 200, 200), (cx - 10, cy - 2, 20, 16), border_radius=3)
+                    pygame.draw.circle(screen, (200, 200, 200), (cx, cy - 2), 8, 3)
+
+            # Section 2 göstermelik kısmı
+            sec2_title = font.render("SECTION 2: COMING SOON...", True, (150, 150, 160))
+            screen.blit(sec2_title, (box_x + 30, box_y + 340))
+
+            # Back Button
+            back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 375
+            back_button_rect = pygame.Rect(back_x, back_y, back_w, back_h)
+            b_color, b_text_color = ((200, 60, 60), (255, 255, 255)) if back_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
+            pygame.draw.rect(screen, (245, 197, 66), (back_x - 3, back_y - 3, back_w + 6, back_h + 6), border_radius=10)
+            pygame.draw.rect(screen, b_color, back_button_rect, border_radius=10)
+            back_text = font.render("BACK", True, b_text_color)
+            screen.blit(back_text, (back_x + (back_w - back_text.get_width()) // 2, back_y + (back_h - back_text.get_height()) // 2))
+
         elif in_settings:
             draw_cosmic_background(screen, menu_mode=True)
             box_w, box_h = 500, 420; box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
@@ -490,9 +582,12 @@ while running:
             pygame.draw.rect(screen, (40, 45, 70), (box_x, box_y, box_w, box_h), border_radius=15)
             
             shop_title = title_font.render("STORE - SKINS", True, (245, 197, 66))
-            screen.blit(shop_title, (350 - shop_title.get_width() // 2, box_y + 20))
+            screen.blit(shop_title, (350 - shop_title.get_width() // 2, box_y + 15))
 
-            start_y = box_y + 110
+            coin_text = font.render(f"YOUR COINS: {total_score}", True, (255, 255, 255))
+            screen.blit(coin_text, (350 - coin_text.get_width() // 2, box_y + 85))
+
+            start_y = box_y + 130
             shop_skin_rects.clear()
             
             for i, (skin_name, color) in enumerate(skin_colors.items()):
@@ -513,9 +608,17 @@ while running:
                 
                 if current_skin == skin_name:
                     pygame.draw.rect(screen, (255, 255, 255), (s_x - 4, s_y - 4, 208, 58), 3, border_radius=10)
+                    status_text = "EQUIPPED"
+                elif skin_name in unlocked_skins:
+                    status_text = "OWNED"
+                else:
+                    status_text = f"{skin_prices[skin_name]} C"
                     
-                skin_text = font.render(skin_name, True, text_color)
-                screen.blit(skin_text, (s_x + (200 - skin_text.get_width()) // 2, s_y + (50 - skin_text.get_height()) // 2))
+                skin_name_surf = small_font.render(skin_name, True, text_color)
+                screen.blit(skin_name_surf, (s_x + 10, s_y + (50 - skin_name_surf.get_height()) // 2))
+
+                status_surf = small_font.render(status_text, True, text_color)
+                screen.blit(status_surf, (s_x + 190 - status_surf.get_width(), s_y + (50 - status_surf.get_height()) // 2))
 
             back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 340
             back_button_rect = pygame.Rect(back_x, back_y, back_w, back_h)
@@ -816,10 +919,6 @@ while running:
             top_bar_y = 10
             ui_text_color = (240, 240, 240)
      
-            pygame.draw.rect(screen, (50, 50, 50), (10, 45, 100, 10))
-            if dash_cooldown == 0: pygame.draw.rect(screen, (100, 200, 255), (10, 45, 100, 10))
-            else: pygame.draw.rect(screen, (100, 100, 100), (10, 45, int(100 * (1 - dash_cooldown/40)), 10))
-            
             screen.blit(font.render(f'Coins: {score}', True, ui_text_color), (10, top_bar_y))
             screen.blit(font.render(f'Level: {current_level}/10', True, ui_text_color), (160, top_bar_y))
             screen.blit(font.render(f'Time: {round(current_time, 1)}s', True, ui_text_color), (300, top_bar_y))
@@ -837,6 +936,11 @@ while running:
                 transition_alpha = 255
                 transition_state = 2 
                 current_level += 1
+                
+                # YENİ: Yeni levele geçince o leveli "açılmış" (unlocked) olarak kaydet.
+                if current_level > unlocked_levels:
+                    unlocked_levels = current_level
+                    
                 load_level(current_level)
                 
         elif transition_state == 2:
@@ -845,22 +949,35 @@ while running:
                 transition_alpha = 0
                 transition_state = 0
     
-    # --- EVENT LOOP'TA CIFT TIKLAMA (DEBOUNCE) KONTROLU ---
     for event in pygame.event.get():
         if event.type == pygame.QUIT: running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             click_time = pygame.time.get_ticks()
-            # 150 milisaniye icinde art arda gelen tiklamalari engelle
             if click_time - last_click_time > 150: 
                 last_click_time = click_time
                 mouse_pos = pygame.mouse.get_pos()
                 
                 if not game_started:
-                    if not in_settings and not in_shop:
-                        if start_button_rect.collidepoint(mouse_pos): game_started = True; reset_game()
+                    # YENİ: in_level_select ile yeni ekran eklendi
+                    if not in_settings and not in_shop and not in_level_select:
+                        # PLAY'e basınca artık oyunu direkt başlatmıyoruz, haritayı açıyoruz
+                        if start_button_rect.collidepoint(mouse_pos): 
+                            in_level_select = True
                         elif store_button_rect.collidepoint(mouse_pos): in_shop = True
                         elif settings_button_rect.collidepoint(mouse_pos): in_settings = True
                         elif exit_button_rect.collidepoint(mouse_pos): running = False
+                    
+                    elif in_level_select:
+                        if back_button_rect.collidepoint(mouse_pos):
+                            in_level_select = False
+                        else:
+                            # Level'lardan birine tıklanırsa ve kilidi açıksa başlat
+                            for lvl, rect in level_rects.items():
+                                if rect.collidepoint(mouse_pos) and lvl <= unlocked_levels:
+                                    game_started = True
+                                    in_level_select = False
+                                    reset_game(lvl)
+
                     elif in_settings:
                         if back_button_rect.collidepoint(mouse_pos): in_settings = False
                         if music_slider_rect.collidepoint(mouse_pos): dragging_music = True
@@ -869,11 +986,19 @@ while running:
                         if back_button_rect.collidepoint(mouse_pos): in_shop = False
                         for skin, rect in shop_skin_rects.items():
                             if rect.collidepoint(mouse_pos):
-                                current_skin = skin
-                                load_player_sprites(skin)
+                                if skin in unlocked_skins:
+                                    current_skin = skin
+                                    load_player_sprites(skin)
+                                else:
+                                    if total_score >= skin_prices[skin]:
+                                        total_score -= skin_prices[skin]
+                                        unlocked_skins.append(skin)
+                                        current_skin = skin
+                                        load_player_sprites(skin)
+                                        if coin_sound: coin_sound.play()
                 else:
                     if game_won or game_over:
-                        if play_again_btn_rect.collidepoint(mouse_pos): reset_game()
+                        if play_again_btn_rect.collidepoint(mouse_pos): reset_game(current_level)
                         elif menu_btn_rect.collidepoint(mouse_pos): game_started = False
 
         if event.type == pygame.MOUSEBUTTONUP: dragging_music = dragging_jump = False
