@@ -4,9 +4,13 @@ import copy
 import math
 
 pygame.init()
-screen = pygame.display.set_mode((700, 500))
+GAME_WIDTH = 700
+GAME_HEIGHT = 500
+screen = pygame.Surface((GAME_WIDTH, GAME_HEIGHT))
+display_surface = pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
 pygame.display.set_caption("Sky Hopper - Premium Edition")
 clock = pygame.time.Clock()
+fullscreen = False
 
 # --- GLOBAL VARIABLES & STATES ---
 cam_x = 0
@@ -40,6 +44,10 @@ dash_speed = 12
 total_score = 0 
 last_click_time = 0  
 
+has_jetpack = False  # Jetpack açıldı mı?
+max_jetpack_fuel = 120  # ~2 saniye
+jetpack_fuel = max_jetpack_fuel
+
 # --- UI RECTS ---
 start_button_rect = pygame.Rect(0, 0, 0, 0)
 store_button_rect = pygame.Rect(0, 0, 0, 0)
@@ -52,6 +60,7 @@ play_again_btn_rect = pygame.Rect(0, 0, 0, 0)
 menu_btn_rect = pygame.Rect(0, 0, 0, 0)
 shop_skin_rects = {}
 level_rects = {} 
+jetpack_rect = pygame.Rect(0, 0, 0, 0) # Jetpack butonu
 
 # --- SHOP & SKIN SYSTEM ---
 current_skin = "Default"
@@ -148,6 +157,16 @@ def get_clean_image(sheet, x, y, width, height, scale_w, scale_h):
         fallback = pygame.Surface((width, height), pygame.SRCALPHA)
         return pygame.transform.scale(fallback, (scale_w, scale_h))
 
+
+def toggle_fullscreen():
+    global fullscreen, display_surface
+    fullscreen = not fullscreen
+    if fullscreen:
+        display_surface = pygame.display.set_mode((1680, 1050), pygame.FULLSCREEN)
+    else:
+        display_surface = pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
+    pygame.display.set_caption("Sky Hopper - Premium Edition")
+
 idle_frames = []
 run_frames = []
 back_frames = []
@@ -181,8 +200,7 @@ def load_player_sprites(skin_name):
         has_sprites = False
 
 load_player_sprites(current_skin)
-
-# --- LEVEL DATA 1-10 ---
+# --- LEVEL DATA 1-19 (Orijinal) ---
 level_1_platforms = [pygame.Rect(0, 470, 280, 30), pygame.Rect(420, 470, 280, 30), pygame.Rect(150, 380, 120, 20), pygame.Rect(340, 300, 120, 20), pygame.Rect(520, 220, 120, 20), pygame.Rect(260, 160, 100, 20)]
 level_1_coins = [pygame.Rect(200, 345, 16, 16), pygame.Rect(390, 265, 16, 16), pygame.Rect(560, 185, 16, 16), pygame.Rect(300, 130, 16, 16)]
 level_1_hazards = [] 
@@ -195,19 +213,19 @@ level_3_platforms = [pygame.Rect(0, 470, 155, 30), pygame.Rect(200, 400, 80, 20)
 level_3_coins = [pygame.Rect(230, 365, 16, 16), pygame.Rect(430, 295, 16, 16), pygame.Rect(630, 215, 16, 16), pygame.Rect(102, 94, 16, 16)]
 level_3_hazards = []
 
-level_4_platforms = [pygame.Rect(0, 470, 150, 30), pygame.Rect(150, 380, 80, 20), pygame.Rect(300, 380, 80, 20), pygame.Rect(550, 300, 80, 20), pygame.Rect(350, 200, 80, 20), pygame.Rect(100, 100, 100, 20), pygame.Rect(354.5, 470, 200, 30)]
+level_4_platforms = [pygame.Rect(0, 470, 150, 30), pygame.Rect(150, 380, 80, 20), pygame.Rect(300, 380, 80, 20), pygame.Rect(550, 300, 80, 20), pygame.Rect(350, 200, 80, 20), pygame.Rect(100, 100, 100, 20), pygame.Rect(354, 470, 200, 30)]
 level_4_coins = [pygame.Rect(180, 345, 16, 16), pygame.Rect(330, 345, 16, 16), pygame.Rect(580, 265, 16, 16), pygame.Rect(142, 74, 16, 16)]
 level_4_hazards = [] 
 
-level_5_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(120, 370, 60, 20), pygame.Rect(30, 270, 60, 20), pygame.Rect(200, 180, 60, 20), pygame.Rect(400, 180, 100, 20), pygame.Rect(600, 100, 80, 20), pygame.Rect(356.5, 295, 73, 20)]
+level_5_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(120, 370, 60, 20), pygame.Rect(30, 270, 60, 20), pygame.Rect(200, 180, 60, 20), pygame.Rect(400, 180, 100, 20), pygame.Rect(600, 100, 80, 20), pygame.Rect(356, 295, 73, 20)]
 level_5_coins = [pygame.Rect(140, 335, 16, 16), pygame.Rect(50, 235, 16, 16), pygame.Rect(220, 145, 16, 16), pygame.Rect(632, 74, 16, 16)]
 level_5_hazards = []
 
-level_6_platforms = [pygame.Rect(0, 470, 173, 16.5), pygame.Rect(150, 400, 50, 20), pygame.Rect(300, 330, 110, 20), pygame.Rect(550, 260, 50, 20), pygame.Rect(300, 160, 119, 20), pygame.Rect(35.4, 100, 95, 20)]
+level_6_platforms = [pygame.Rect(0, 470, 173, 16), pygame.Rect(150, 400, 50, 20), pygame.Rect(300, 330, 110, 20), pygame.Rect(550, 260, 50, 20), pygame.Rect(300, 160, 119, 20), pygame.Rect(35, 100, 95, 20)]
 level_6_coins = [pygame.Rect(165, 365, 16, 16), pygame.Rect(565, 225, 16, 16), pygame.Rect(330, 125, 16, 16), pygame.Rect(72, 74, 16, 16)]
 level_6_hazards = []
 
-level_7_platforms = [pygame.Rect(0, 470, 120, 30), pygame.Rect(180, 400, 60, 20), pygame.Rect(350, 330, 60, 20), pygame.Rect(520, 260, 60, 20), pygame.Rect(350, 180, 60, 20), pygame.Rect(152.5, 100, 100, 20)]
+level_7_platforms = [pygame.Rect(0, 470, 120, 30), pygame.Rect(180, 400, 60, 20), pygame.Rect(350, 330, 60, 20), pygame.Rect(520, 260, 60, 20), pygame.Rect(350, 180, 60, 20), pygame.Rect(152, 100, 100, 20)]
 level_7_coins = [pygame.Rect(202, 365, 16, 16), pygame.Rect(542, 225, 16, 16), pygame.Rect(372, 145, 16, 16), pygame.Rect(192, 76, 16, 16)]
 level_7_hazards = []
 
@@ -215,55 +233,153 @@ level_8_platforms = [pygame.Rect(0, 470, 140, 30), pygame.Rect(150, 420, 50, 20)
 level_8_coins = [pygame.Rect(167, 385, 16, 16), pygame.Rect(317, 315, 16, 16), pygame.Rect(467, 245, 16, 16), pygame.Rect(132, 56, 16, 16)]
 level_8_hazards = []
 
-level_9_platforms = [pygame.Rect(0, 470, 140, 30), pygame.Rect(150, 380, 40, 20), pygame.Rect(300, 380, 40, 20), pygame.Rect(480, 300, 40, 20), pygame.Rect(600, 220, 60, 20), pygame.Rect(400, 150, 40, 20), pygame.Rect(200, 100, 40, 20), pygame.Rect(37, 63.5, 90, 20)]
+level_9_platforms = [pygame.Rect(0, 470, 140, 30), pygame.Rect(150, 380, 40, 20), pygame.Rect(300, 380, 40, 20), pygame.Rect(480, 300, 40, 20), pygame.Rect(600, 220, 60, 20), pygame.Rect(400, 150, 40, 20), pygame.Rect(200, 100, 40, 20), pygame.Rect(37, 63, 90, 20)]
 level_9_coins = [pygame.Rect(162, 345, 16, 16), pygame.Rect(492, 265, 16, 16), pygame.Rect(412, 115, 16, 16), pygame.Rect(72, 36, 16, 16)]
 level_9_hazards = []
 
-level_10_platforms = [pygame.Rect(0, 470, 140, 30), pygame.Rect(150, 400, 40, 20), pygame.Rect(350, 350, 40, 20), pygame.Rect(550, 280, 40, 20), pygame.Rect(350, 200, 40, 20), pygame.Rect(485.5, 95, 90, 20)]
+level_10_platforms = [pygame.Rect(0, 470, 140, 30), pygame.Rect(150, 400, 40, 20), pygame.Rect(350, 350, 40, 20), pygame.Rect(550, 280, 40, 20), pygame.Rect(350, 200, 40, 20), pygame.Rect(485, 95, 90, 20)]
 level_10_coins = [pygame.Rect(162, 365, 16, 16), pygame.Rect(562, 245, 16, 16), pygame.Rect(522, 64, 16, 16)]
 level_10_hazards = []
 
-# --- LEVEL DATA 11-20 ---
-level_11_platforms = [pygame.Rect(0, 470, 120, 30), pygame.Rect(200, 400, 60, 20), pygame.Rect(400, 330, 60, 20), pygame.Rect(200, 250, 60, 20), pygame.Rect(400, 170, 60, 20), pygame.Rect(150, 80, 100, 20)]
-level_11_coins = [pygame.Rect(220, 360, 16, 16), pygame.Rect(420, 290, 16, 16), pygame.Rect(220, 210, 16, 16), pygame.Rect(190, 40, 16, 16)]
-level_11_hazards = []
+# --- HAZARD (DÜŞME ENGELLERİ) EKLENMİŞ VE GELİŞTİRİLMİŞ LEVEL DATA 11-19 ---
+# Level 11 (Kısalık sorunu için daha karmaşık hale getirildi)
+level_11_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(200, 320, 70, 20), pygame.Rect(350, 250, 70, 20), pygame.Rect(150, 180, 70, 20), pygame.Rect(350, 120, 70, 20), pygame.Rect(550, 100, 100, 20)]
+level_11_coins = [pygame.Rect(220, 290, 16, 16), pygame.Rect(370, 220, 16, 16), pygame.Rect(170, 150, 16, 16), pygame.Rect(580, 70, 16, 16)]
+level_11_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(300, 350, 100, 20)] # Düşme engeli + Ortaya lav
 
-level_12_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(150, 400, 60, 20), pygame.Rect(350, 350, 80, 20), pygame.Rect(550, 300, 60, 20), pygame.Rect(350, 200, 80, 20), pygame.Rect(150, 100, 100, 20)]
-level_12_coins = [pygame.Rect(170, 360, 16, 16), pygame.Rect(570, 260, 16, 16), pygame.Rect(380, 160, 16, 16), pygame.Rect(190, 60, 16, 16)]
-level_12_hazards = []
+level_12_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(200, 380, 100, 20), pygame.Rect(400, 350, 100, 20), pygame.Rect(550, 250, 100, 20), pygame.Rect(350, 180, 100, 20), pygame.Rect(150, 100, 100, 20)]
+level_12_coins = [pygame.Rect(242, 350, 16, 16), pygame.Rect(592, 220, 16, 16), pygame.Rect(392, 150, 16, 16), pygame.Rect(192, 70, 16, 16)]
+level_12_hazards = [pygame.Rect(150, 480, 550, 20)]
 
-level_13_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(200, 420, 50, 20), pygame.Rect(400, 370, 50, 20), pygame.Rect(600, 320, 50, 20), pygame.Rect(400, 220, 50, 20), pygame.Rect(200, 120, 50, 20), pygame.Rect(50, 60, 80, 20)]
-level_13_coins = [pygame.Rect(215, 380, 16, 16), pygame.Rect(615, 280, 16, 16), pygame.Rect(415, 180, 16, 16), pygame.Rect(80, 20, 16, 16)]
-level_13_hazards = []
+# Level 13 (Kısalık sorunu için yeni platformlar ve daha dikey oynanış)
+level_13_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(200, 300, 80, 20), pygame.Rect(50, 220, 80, 20), pygame.Rect(250, 150, 80, 20), pygame.Rect(450, 200, 80, 20), pygame.Rect(600, 120, 100, 20)]
+level_13_coins = [pygame.Rect(230, 270, 16, 16), pygame.Rect(80, 190, 16, 16), pygame.Rect(280, 120, 16, 16), pygame.Rect(640, 90, 16, 16)]
+level_13_hazards = [pygame.Rect(150, 480, 550, 20)]
 
-level_14_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(150, 380, 40, 20), pygame.Rect(300, 380, 40, 20), pygame.Rect(450, 300, 40, 20), pygame.Rect(600, 220, 40, 20), pygame.Rect(400, 140, 40, 20), pygame.Rect(200, 90, 80, 20)]
-level_14_coins = [pygame.Rect(162, 340, 16, 16), pygame.Rect(462, 260, 16, 16), pygame.Rect(412, 100, 16, 16), pygame.Rect(230, 50, 16, 16)]
-level_14_hazards = []
+level_14_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(220, 380, 100, 20), pygame.Rect(420, 320, 100, 20), pygame.Rect(600, 250, 100, 20), pygame.Rect(400, 180, 100, 20), pygame.Rect(200, 100, 100, 20)]
+level_14_coins = [pygame.Rect(262, 350, 16, 16), pygame.Rect(462, 290, 16, 16), pygame.Rect(442, 150, 16, 16), pygame.Rect(242, 70, 16, 16)]
+level_14_hazards = [pygame.Rect(150, 480, 550, 20)]
 
-level_15_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(150, 400, 60, 20), pygame.Rect(350, 400, 60, 20), pygame.Rect(550, 350, 60, 20), pygame.Rect(350, 250, 60, 20), pygame.Rect(150, 150, 60, 20), pygame.Rect(350, 80, 80, 20)]
-level_15_coins = [pygame.Rect(170, 360, 16, 16), pygame.Rect(570, 310, 16, 16), pygame.Rect(170, 110, 16, 16), pygame.Rect(380, 40, 16, 16)]
-level_15_hazards = []
+level_15_platforms = [pygame.Rect(0, 350, 120, 30), pygame.Rect(180, 320, 100, 20), pygame.Rect(380, 320, 100, 20), pygame.Rect(580, 250, 100, 20), pygame.Rect(380, 180, 100, 20), pygame.Rect(180, 120, 100, 20), pygame.Rect(380, 60, 100, 20)]
+level_15_coins = [pygame.Rect(222, 290, 16, 16), pygame.Rect(622, 220, 16, 16), pygame.Rect(222, 90, 16, 16), pygame.Rect(422, 30, 16, 16)]
+level_15_hazards = [pygame.Rect(150, 480, 550, 20)]
 
-level_16_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(120, 350, 50, 20), pygame.Rect(300, 280, 50, 20), pygame.Rect(500, 210, 50, 20), pygame.Rect(650, 140, 50, 20), pygame.Rect(400, 80, 80, 20)]
-level_16_coins = [pygame.Rect(135, 310, 16, 16), pygame.Rect(515, 170, 16, 16), pygame.Rect(430, 40, 16, 16)]
-level_16_hazards = []
+# Level 16 (Geri dönmeli, engelli ve zorlu tasarım)
+level_16_platforms = [pygame.Rect(0, 350, 120, 30), pygame.Rect(180, 300, 70, 20), pygame.Rect(380, 250, 70, 20), pygame.Rect(580, 200, 70, 20), pygame.Rect(350, 150, 60, 20), pygame.Rect(150, 100, 80, 20)]
+level_16_coins = [pygame.Rect(200, 270, 16, 16), pygame.Rect(600, 170, 16, 16), pygame.Rect(180, 70, 16, 16)]
+level_16_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(300, 320, 50, 20)]
 
-level_17_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(200, 400, 40, 20), pygame.Rect(400, 350, 40, 20), pygame.Rect(600, 300, 40, 20), pygame.Rect(400, 200, 40, 20), pygame.Rect(200, 100, 40, 20), pygame.Rect(50, 50, 60, 20)]
-level_17_coins = [pygame.Rect(212, 360, 16, 16), pygame.Rect(612, 260, 16, 16), pygame.Rect(212, 60, 16, 16), pygame.Rect(70, 10, 16, 16)]
-level_17_hazards = []
+level_17_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(250, 350, 100, 20), pygame.Rect(450, 300, 100, 20), pygame.Rect(600, 220, 100, 20), pygame.Rect(400, 150, 100, 20), pygame.Rect(200, 80, 100, 20)]
+level_17_coins = [pygame.Rect(292, 320, 16, 16), pygame.Rect(642, 190, 16, 16), pygame.Rect(442, 120, 16, 16), pygame.Rect(242, 50, 16, 16)]
+level_17_hazards = [pygame.Rect(150, 480, 550, 20)]
 
-level_18_platforms = [pygame.Rect(0, 470, 80, 30), pygame.Rect(150, 420, 60, 20), pygame.Rect(350, 360, 60, 20), pygame.Rect(550, 300, 60, 20), pygame.Rect(350, 220, 60, 20), pygame.Rect(150, 140, 60, 20), pygame.Rect(350, 60, 80, 20)]
-level_18_coins = [pygame.Rect(170, 380, 16, 16), pygame.Rect(570, 260, 16, 16), pygame.Rect(170, 100, 16, 16), pygame.Rect(380, 20, 16, 16)]
-level_18_hazards = []
+level_18_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(200, 400, 120, 20), pygame.Rect(420, 340, 100, 20), pygame.Rect(600, 260, 100, 20), pygame.Rect(400, 180, 100, 20), pygame.Rect(200, 100, 100, 20)]
+level_18_coins = [pygame.Rect(252, 370, 16, 16), pygame.Rect(642, 230, 16, 16), pygame.Rect(442, 150, 16, 16), pygame.Rect(242, 70, 16, 16)]
+level_18_hazards = [pygame.Rect(150, 480, 550, 20)]
 
-level_19_platforms = [pygame.Rect(0, 470, 60, 30), pygame.Rect(150, 380, 40, 20), pygame.Rect(350, 300, 40, 20), pygame.Rect(550, 220, 40, 20), pygame.Rect(350, 140, 40, 20), pygame.Rect(150, 80, 80, 20)]
-level_19_coins = [pygame.Rect(162, 340, 16, 16), pygame.Rect(562, 180, 16, 16), pygame.Rect(180, 40, 16, 16)]
-level_19_hazards = []
+level_19_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(220, 320, 100, 20), pygame.Rect(420, 250, 100, 20), pygame.Rect(600, 180, 100, 20), pygame.Rect(380, 100, 100, 20)]
+level_19_coins = [pygame.Rect(262, 290, 16, 16), pygame.Rect(642, 150, 16, 16), pygame.Rect(422, 70, 16, 16)]
+level_19_hazards = [pygame.Rect(150, 480, 550, 20)]
 
-level_20_platforms = [pygame.Rect(0, 470, 100, 30), pygame.Rect(150, 400, 50, 20), pygame.Rect(350, 350, 50, 20), pygame.Rect(550, 280, 50, 20), pygame.Rect(350, 200, 50, 20), pygame.Rect(500, 100, 90, 20)]
-level_20_coins = [pygame.Rect(167, 360, 16, 16), pygame.Rect(567, 240, 16, 16), pygame.Rect(535, 60, 16, 16)]
-level_20_hazards = []
+# --- LEVEL DATA 20-30 (Zorlaştırılmış - Düşme Sorunu Giderilmiş) ---
+# --- LEVEL DATA 20-30 (Zorlaştırılmış - Düşme Sorunu Giderilmiş) ---
 
+# Level 20
+level_20_platforms = [pygame.Rect(0, 310, 150, 30), pygame.Rect(200, 300, 80, 20), pygame.Rect(350, 250, 80, 20), pygame.Rect(550, 200, 80, 20), pygame.Rect(350, 120, 80, 20), pygame.Rect(100, 80, 100, 20)]
+level_20_coins = [pygame.Rect(230, 270, 16, 16), pygame.Rect(580, 170, 16, 16), pygame.Rect(140, 50, 16, 16)]
+level_20_hazards = [pygame.Rect(150, 480, 550, 20)] 
+
+# Level 21
+level_21_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(200, 380, 60, 20), pygame.Rect(400, 320, 50, 20), pygame.Rect(600, 250, 60, 20), pygame.Rect(350, 150, 50, 20), pygame.Rect(150, 90, 80, 20)]
+level_21_coins = [pygame.Rect(415, 290, 16, 16), pygame.Rect(620, 220, 16, 16), pygame.Rect(180, 60, 16, 16)]
+level_21_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+# Level 22
+level_22_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(180, 420, 60, 20), pygame.Rect(320, 380, 60, 20), pygame.Rect(470, 300, 60, 20), pygame.Rect(270, 220, 60, 20), pygame.Rect(70, 140, 80, 20), pygame.Rect(300, 80, 80, 20)]
+level_22_coins = [pygame.Rect(340, 350, 16, 16), pygame.Rect(290, 190, 16, 16), pygame.Rect(330, 50, 16, 16)]
+level_22_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+# Level 23
+level_23_platforms = [pygame.Rect(0, 310, 150, 30), pygame.Rect(240, 310, 60, 20), pygame.Rect(450, 300, 60, 20), pygame.Rect(620, 200, 60, 20), pygame.Rect(400, 120, 60, 20), pygame.Rect(200, 70, 80, 20)]
+level_23_coins = [pygame.Rect(260, 320, 16, 16), pygame.Rect(640, 170, 16, 16), pygame.Rect(230, 40, 16, 16)]
+level_23_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+# Level 24
+level_24_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(220, 350, 80, 20), pygame.Rect(420, 280, 80, 20), pygame.Rect(600, 200, 80, 20), pygame.Rect(300, 120, 80, 20), pygame.Rect(100, 60, 80, 20)]
+level_24_coins = [pygame.Rect(250, 320, 16, 16), pygame.Rect(630, 170, 16, 16), pygame.Rect(130, 30, 16, 16)]
+level_24_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(350, 380, 150, 20)] 
+
+# Level 25
+level_25_platforms = [pygame.Rect(0, 310, 150, 30), pygame.Rect(200, 280, 50, 20), pygame.Rect(50, 200, 50, 20), pygame.Rect(200, 130, 50, 20), pygame.Rect(350, 100, 50, 20), pygame.Rect(550, 80, 80, 20)]
+level_25_coins = [pygame.Rect(65, 170, 16, 16), pygame.Rect(365, 70, 16, 16), pygame.Rect(580, 50, 16, 16)]
+level_25_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+# Level 26
+level_26_platforms = [pygame.Rect(0, 310, 150, 30), pygame.Rect(200, 270, 80, 20), pygame.Rect(350, 220, 80, 20), pygame.Rect(500, 170, 80, 20), pygame.Rect(350, 120, 80, 20), pygame.Rect(150, 70, 80, 20)]
+level_26_coins = [pygame.Rect(230, 240, 16, 16), pygame.Rect(380, 190, 16, 16), pygame.Rect(530, 140, 16, 16), pygame.Rect(180, 40, 16, 16)]
+level_26_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+# Level 27
+level_27_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(220, 300, 80, 20), pygame.Rect(450, 250, 80, 20), pygame.Rect(620, 180, 60, 20), pygame.Rect(400, 100, 60, 20), pygame.Rect(150, 80, 80, 20)]
+level_27_coins = [pygame.Rect(250, 270, 16, 16), pygame.Rect(640, 150, 16, 16), pygame.Rect(180, 50, 16, 16)]
+level_27_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+# Level 28
+level_28_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(200, 400, 60, 20), pygame.Rect(380, 320, 60, 20), pygame.Rect(520, 250, 60, 20), pygame.Rect(350, 160, 60, 20), pygame.Rect(150, 100, 80, 20)]
+level_28_coins = [pygame.Rect(215, 370, 16, 16), pygame.Rect(535, 220, 16, 16), pygame.Rect(180, 70, 16, 16)]
+level_28_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(280, 400, 60, 20), pygame.Rect(460, 320, 40, 20)]
+
+# Level 29
+level_29_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(250, 300, 40, 20), pygame.Rect(500, 250, 40, 20), pygame.Rect(650, 150, 40, 20), pygame.Rect(350, 100, 40, 20), pygame.Rect(100, 60, 80, 20)]
+level_29_coins = [pygame.Rect(260, 270, 16, 16), pygame.Rect(660, 120, 16, 16), pygame.Rect(360, 70, 16, 16)]
+level_29_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+# Level 30
+level_30_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(180, 380, 50, 20), pygame.Rect(380, 350, 50, 20), pygame.Rect(580, 280, 50, 20), pygame.Rect(350, 200, 50, 20), pygame.Rect(150, 140, 50, 20), pygame.Rect(300, 70, 80, 20)]
+level_30_coins = [pygame.Rect(195, 350, 16, 16), pygame.Rect(595, 250, 16, 16), pygame.Rect(165, 110, 16, 16)]
+level_30_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(280, 280, 80, 20), pygame.Rect(480, 180, 80, 20)]
+
+# Level 31-40 (Extra content)
+level_31_platforms = [pygame.Rect(0, 350, 150, 30), pygame.Rect(200, 320, 80, 20), pygame.Rect(380, 260, 80, 20), pygame.Rect(560, 200, 80, 20), pygame.Rect(350, 130, 80, 20), pygame.Rect(140, 70, 80, 20)]
+level_31_coins = [pygame.Rect(230, 290, 16, 16), pygame.Rect(590, 170, 16, 16), pygame.Rect(170, 40, 16, 16)]
+level_31_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+level_32_platforms = [pygame.Rect(0, 350, 120, 30), pygame.Rect(180, 290, 60, 20), pygame.Rect(360, 240, 60, 20), pygame.Rect(540, 180, 60, 20), pygame.Rect(260, 140, 80, 20), pygame.Rect(430, 80, 80, 20)]
+level_32_coins = [pygame.Rect(205, 260, 16, 16), pygame.Rect(565, 150, 16, 16), pygame.Rect(455, 50, 16, 16)]
+level_32_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(300, 380, 80, 20)]
+
+level_33_platforms = [pygame.Rect(0, 360, 160, 30), pygame.Rect(220, 310, 70, 20), pygame.Rect(420, 280, 70, 20), pygame.Rect(610, 220, 70, 20), pygame.Rect(330, 150, 70, 20), pygame.Rect(150, 90, 80, 20)]
+level_33_coins = [pygame.Rect(250, 280, 16, 16), pygame.Rect(640, 190, 16, 16), pygame.Rect(180, 60, 16, 16)]
+level_33_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+level_34_platforms = [pygame.Rect(0, 330, 140, 30), pygame.Rect(180, 300, 60, 20), pygame.Rect(360, 250, 60, 20), pygame.Rect(540, 200, 60, 20), pygame.Rect(260, 150, 60, 20), pygame.Rect(100, 100, 80, 20), pygame.Rect(430, 80, 80, 20)]
+level_34_coins = [pygame.Rect(205, 270, 16, 16), pygame.Rect(565, 170, 16, 16), pygame.Rect(455, 50, 16, 16)]
+level_34_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+level_35_platforms = [pygame.Rect(0, 340, 130, 30), pygame.Rect(200, 300, 70, 20), pygame.Rect(390, 260, 70, 20), pygame.Rect(580, 210, 70, 20), pygame.Rect(320, 140, 70, 20), pygame.Rect(110, 80, 80, 20)]
+level_35_coins = [pygame.Rect(220, 270, 16, 16), pygame.Rect(612, 180, 16, 16), pygame.Rect(140, 50, 16, 16)]
+level_35_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(300, 360, 80, 20)]
+
+level_36_platforms = [pygame.Rect(0, 320, 150, 30), pygame.Rect(220, 290, 80, 20), pygame.Rect(420, 260, 80, 20), pygame.Rect(600, 220, 80, 20), pygame.Rect(320, 140, 80, 20), pygame.Rect(130, 80, 80, 20)]
+level_36_coins = [pygame.Rect(250, 260, 16, 16), pygame.Rect(632, 190, 16, 16), pygame.Rect(160, 50, 16, 16)]
+level_36_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+level_37_platforms = [pygame.Rect(0, 340, 120, 30), pygame.Rect(180, 300, 60, 20), pygame.Rect(360, 250, 60, 20), pygame.Rect(540, 190, 60, 20), pygame.Rect(250, 150, 60, 20), pygame.Rect(90, 90, 80, 20), pygame.Rect(430, 70, 80, 20)]
+level_37_coins = [pygame.Rect(205, 270, 16, 16), pygame.Rect(565, 160, 16, 16), pygame.Rect(455, 40, 16, 16)]
+level_37_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+level_38_platforms = [pygame.Rect(0, 360, 140, 30), pygame.Rect(200, 320, 70, 20), pygame.Rect(380, 280, 70, 20), pygame.Rect(560, 240, 70, 20), pygame.Rect(320, 180, 70, 20), pygame.Rect(140, 120, 80, 20)]
+level_38_coins = [pygame.Rect(230, 290, 16, 16), pygame.Rect(590, 210, 16, 16), pygame.Rect(170, 90, 16, 16)]
+level_38_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(300, 380, 100, 20)]
+
+level_39_platforms = [pygame.Rect(0, 330, 150, 30), pygame.Rect(220, 290, 80, 20), pygame.Rect(420, 240, 80, 20), pygame.Rect(610, 180, 70, 20), pygame.Rect(330, 120, 70, 20), pygame.Rect(140, 70, 80, 20)]
+level_39_coins = [pygame.Rect(250, 260, 16, 16), pygame.Rect(640, 150, 16, 16), pygame.Rect(170, 40, 16, 16)]
+level_39_hazards = [pygame.Rect(150, 480, 550, 20)]
+
+level_40_platforms = [pygame.Rect(0, 350, 160, 30), pygame.Rect(220, 310, 80, 20), pygame.Rect(430, 270, 80, 20), pygame.Rect(610, 220, 80, 20), pygame.Rect(330, 150, 80, 20), pygame.Rect(130, 80, 80, 20)]
+level_40_coins = [pygame.Rect(250, 280, 16, 16), pygame.Rect(642, 190, 16, 16), pygame.Rect(160, 50, 16, 16)]
+level_40_hazards = [pygame.Rect(150, 480, 550, 20), pygame.Rect(300, 380, 100, 20)]
+# Tüm yeni bölümlerin hareketli platformları
 level_moving_data = {
     1: [{'idx': 5, 'dir': 1, 'min': 150, 'max': 450}],
     2: [{'idx': 3, 'dir': 1, 'min': 100, 'max': 400}],
@@ -275,19 +391,40 @@ level_moving_data = {
     8: [{'idx': 1, 'dir': 1, 'min': 120, 'max': 250}, {'idx': 2, 'dir': -1, 'min': 280, 'max': 420}, {'idx': 3, 'dir': 1, 'min': 420, 'max': 580}],
     9: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 400}, {'idx': 4, 'dir': -1, 'min': 550, 'max': 650}, {'idx': 5, 'dir': 1, 'min': 350, 'max': 500}],
     10: [{'idx': 1, 'dir': 1, 'min': 100, 'max': 250}, {'idx': 3, 'dir': -1, 'min': 450, 'max': 620}, {'idx': 5, 'dir': 1, 'min': 100, 'max': 250}],
-    11: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}, {'idx': 4, 'dir': -1, 'min': 300, 'max': 500}],
-    12: [{'idx': 2, 'dir': 1, 'min': 200, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 200, 'max': 450}],
-    13: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}, {'idx': 4, 'dir': -1, 'min': 300, 'max': 500}],
-    14: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 400}, {'idx': 4, 'dir': -1, 'min': 500, 'max': 650}],
-    15: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
-    16: [{'idx': 2, 'dir': 1, 'min': 200, 'max': 400}, {'idx': 3, 'dir': -1, 'min': 400, 'max': 600}],
-    17: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}, {'idx': 4, 'dir': -1, 'min': 300, 'max': 500}],
-    18: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
-    19: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
-    20: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}]
+    11: [{'idx': 2, 'dir': 1, 'min': 350, 'max': 500}],
+    12: [{'idx': 2, 'dir': 1, 'min': 350, 'max': 500}],
+    13: [{'idx': 2, 'dir': 1, 'min': 350, 'max': 500}],
+    14: [{'idx': 2, 'dir': 1, 'min': 350, 'max': 500}],
+    15: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}],
+    16: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}],
+    17: [{'idx': 2, 'dir': 1, 'min': 350, 'max': 550}],
+    18: [{'idx': 2, 'dir': 1, 'min': 350, 'max': 500}],
+    19: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}],
+    # 20-30 Seviyelerinin Zorlaştırılmış Hareket Rotaları
+    20: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}, {'idx': 4, 'dir': -1, 'min': 200, 'max': 450}],
+    21: [{'idx': 2, 'dir': 1, 'min': 350, 'max': 550}, {'idx': 3, 'dir': -1, 'min': 450, 'max': 650}],
+    22: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 4, 'dir': -1, 'min': 150, 'max': 350}],
+    23: [{'idx': 2, 'dir': 1, 'min': 350, 'max': 600}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 500}],
+    24: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 550}, {'idx': 3, 'dir': -1, 'min': 450, 'max': 650}],
+    25: [{'idx': 2, 'dir': 1, 'min': 50, 'max': 250}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
+    26: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}, {'idx': 5, 'dir': -1, 'min': 200, 'max': 500}],
+    27: [{'idx': 1, 'dir': 1, 'min': 150, 'max': 350}, {'idx': 3, 'dir': -1, 'min': 450, 'max': 650}],
+    28: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
+    29: [{'idx': 2, 'dir': 1, 'min': 450, 'max': 650}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 450}],
+    30: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 550}, {'idx': 4, 'dir': -1, 'min': 250, 'max': 500}],
+    31: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}],
+    32: [{'idx': 3, 'dir': -1, 'min': 250, 'max': 500}],
+    33: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}],
+    34: [{'idx': 3, 'dir': -1, 'min': 250, 'max': 450}],
+    35: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}],
+    36: [{'idx': 3, 'dir': -1, 'min': 280, 'max': 500}],
+    37: [{'idx': 2, 'dir': 1, 'min': 250, 'max': 450}],
+    38: [{'idx': 3, 'dir': -1, 'min': 300, 'max': 500}],
+    39: [{'idx': 2, 'dir': 1, 'min': 300, 'max': 500}],
+    40: [{'idx': 3, 'dir': -1, 'min': 250, 'max': 450}]
 }
 
-current_level = 1
+current_level = 20
 platforms = []
 coins = []
 hazards = []
@@ -325,24 +462,35 @@ def spawn_particles(x, y, color, amount=10, size=4, spread=2):
 
 def load_level(level_num):
     global platforms, coins, hazards, current_moving_data, player, vel_y, door_rect
-    global is_door_opening, door_anim_index, cam_x, cam_y, particles, ghost_trails
+    global is_door_opening, door_anim_index, cam_x, cam_y, particles, ghost_trails, jetpack_fuel
     
     is_door_opening = False
     door_anim_index = 3  
     particles.clear()
     ghost_trails.clear()
+    jetpack_fuel = max_jetpack_fuel
     
     level_data = {
-        1: (level_1_platforms, level_1_coins, level_1_hazards), 2: (level_2_platforms, level_2_coins, level_2_hazards),
-        3: (level_3_platforms, level_3_coins, level_3_hazards), 4: (level_4_platforms, level_4_coins, level_4_hazards),
-        5: (level_5_platforms, level_5_coins, level_5_hazards), 6: (level_6_platforms, level_6_coins, level_6_hazards),
-        7: (level_7_platforms, level_7_coins, level_7_hazards), 8: (level_8_platforms, level_8_coins, level_8_hazards),
-        9: (level_9_platforms, level_9_coins, level_9_hazards), 10: (level_10_platforms, level_10_coins, level_10_hazards),
-        11: (level_11_platforms, level_11_coins, level_11_hazards), 12: (level_12_platforms, level_12_coins, level_12_hazards),
-        13: (level_13_platforms, level_13_coins, level_13_hazards), 14: (level_14_platforms, level_14_coins, level_14_hazards),
-        15: (level_15_platforms, level_15_coins, level_15_hazards), 16: (level_16_platforms, level_16_coins, level_16_hazards),
-        17: (level_17_platforms, level_17_coins, level_17_hazards), 18: (level_18_platforms, level_18_coins, level_18_hazards),
-        19: (level_19_platforms, level_19_coins, level_19_hazards), 20: (level_20_platforms, level_20_coins, level_20_hazards)
+        1: (level_1_platforms, level_1_coins, []), 2: (level_2_platforms, level_2_coins, []),
+        3: (level_3_platforms, level_3_coins, []), 4: (level_4_platforms, level_4_coins, []),
+        5: (level_5_platforms, level_5_coins, []), 6: (level_6_platforms, level_6_coins, []),
+        7: (level_7_platforms, level_7_coins, []), 8: (level_8_platforms, level_8_coins, []),
+        9: (level_9_platforms, level_9_coins, []), 10: (level_10_platforms, level_10_coins, []),
+        11: (level_11_platforms, level_11_coins, []), 12: (level_12_platforms, level_12_coins, []),
+        13: (level_13_platforms, level_13_coins, []), 14: (level_14_platforms, level_14_coins, []),
+        15: (level_15_platforms, level_15_coins, []), 16: (level_16_platforms, level_16_coins, []),
+        17: (level_17_platforms, level_17_coins, []), 18: (level_18_platforms, level_18_coins, []),
+        19: (level_19_platforms, level_19_coins, []), 20: (level_20_platforms, level_20_coins, []),
+        21: (level_21_platforms, level_21_coins, []), 22: (level_22_platforms, level_22_coins, []),
+        23: (level_23_platforms, level_23_coins, []), 24: (level_24_platforms, level_24_coins, []),
+        25: (level_25_platforms, level_25_coins, []), 26: (level_26_platforms, level_26_coins, []),
+        27: (level_27_platforms, level_27_coins, []), 28: (level_28_platforms, level_28_coins, []),
+        29: (level_29_platforms, level_29_coins, []), 30: (level_30_platforms, level_30_coins, []),
+        31: (level_31_platforms, level_31_coins, []), 32: (level_32_platforms, level_32_coins, []),
+        33: (level_33_platforms, level_33_coins, []), 34: (level_34_platforms, level_34_coins, []),
+        35: (level_35_platforms, level_35_coins, []), 36: (level_36_platforms, level_36_coins, []),
+        37: (level_37_platforms, level_37_coins, []), 38: (level_38_platforms, level_38_coins, []),
+        39: (level_39_platforms, level_39_coins, []), 40: (level_40_platforms, level_40_coins, [])
     }
     platforms = [pygame.Rect(p) for p in level_data[level_num][0]]
     coins = [pygame.Rect(c) for c in level_data[level_num][1]]
@@ -355,7 +503,7 @@ def load_level(level_num):
     cam_x = player.centerx - 350
     cam_y = player.centery - 250
     
-    if level_num == 20:
+    if level_num == 30:
         door_rect.x = 520  
         door_rect.y = 200  
     elif coins:
@@ -367,7 +515,7 @@ def reset_game(starting_level=None):
     global current_level, score, start_time, game_won, game_over
     global is_running_sound_playing
     global transition_state, transition_alpha
-    global cam_x, cam_y, screen_shake
+    global cam_x, cam_y, screen_shake, jetpack_fuel
     
     if starting_level is not None:
         current_level = starting_level
@@ -381,6 +529,7 @@ def reset_game(starting_level=None):
     cam_x = 0
     cam_y = 0
     screen_shake = 0
+    jetpack_fuel = max_jetpack_fuel
     
     if 'run_sound' in globals() and run_sound: run_sound.stop()
     is_running_sound_playing = False
@@ -393,10 +542,12 @@ def reset_game(starting_level=None):
 try:
     font = pygame.font.SysFont("Impact", 30)
     small_font = pygame.font.SysFont("Impact", 20)
+    hud_font = pygame.font.SysFont("Impact", 22)
     title_font = pygame.font.SysFont("Impact", 60) 
 except pygame.error:
     font = pygame.font.SysFont(None, 30)
     small_font = pygame.font.SysFont(None, 24)
+    hud_font = pygame.font.SysFont(None, 22)
     title_font = pygame.font.SysFont(None, 60)
 
 shooting_stars = []
@@ -531,7 +682,7 @@ while running:
             
         elif in_level_select:
             draw_cosmic_background(screen, menu_mode=True)
-            box_w, box_h = 620, 440; box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
+            box_w, box_h = 660, 520; box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
             
             title = title_font.render("SELECT LEVEL", True, (245, 197, 66))
             screen.blit(title, (350 - title.get_width() // 2, box_y - 65))
@@ -539,33 +690,40 @@ while running:
             pygame.draw.rect(screen, (10, 10, 20), (box_x - 5, box_y - 5, box_w + 10, box_h + 10), border_radius=15)
             pygame.draw.rect(screen, (40, 45, 70), (box_x, box_y, box_w, box_h), border_radius=15)
 
-            sec1_title = small_font.render("SECTION 1: THE NEBULA", True, (255, 255, 255))
-            screen.blit(sec1_title, (box_x + 30, box_y + 15))
+            sec1_title = small_font.render("SEC 1: THE NEBULA", True, (255, 255, 255))
+            screen.blit(sec1_title, (box_x + 30, box_y + 10))
 
-            sec2_title = small_font.render("SECTION 2: DEEP SPACE", True, (255, 255, 255))
-            screen.blit(sec2_title, (box_x + 30, box_y + 185))
+            sec2_title = small_font.render("SEC 2: DEEP SPACE", True, (255, 255, 255))
+            screen.blit(sec2_title, (box_x + 30, box_y + 140))
 
-            level_coords = {
-                # Section 1
-                1: (50, 70), 2: (140, 50), 3: (230, 70), 4: (320, 50), 5: (410, 70),
-                6: (500, 50), 7: (560, 100), 8: (480, 130), 9: (390, 100), 10: (300, 130),
-                
-                # Section 2
-                11: (50, 240), 12: (140, 220), 13: (230, 240), 14: (320, 220), 15: (410, 240),
-                16: (500, 220), 17: (560, 270), 18: (480, 300), 19: (390, 270), 20: (300, 300)
-            }
+            sec3_title = small_font.render("SEC 3: VOID'S EDGE", True, (255, 255, 255))
+            screen.blit(sec3_title, (box_x + 30, box_y + 270))
 
-            for i in range(1, 20):
-                if i == 10: continue 
+            sec4_title = small_font.render("SEC 4: STARFALL", True, (255, 255, 255))
+            screen.blit(sec4_title, (box_x + 30, box_y + 400))
+
+            level_coords = {}
+            xs = [50, 110, 170, 230, 290, 350, 410, 470, 530, 590]
+            y_bases = [50, 180, 310, 440]
+            
+            for sec in range(4):
+                for i in range(10):
+                    lvl = sec * 10 + i + 1
+                    if lvl > 40: break
+                    offset_y = 25 if i % 2 == 1 else 0
+                    level_coords[lvl] = (xs[i], y_bases[sec] + offset_y)
+
+            for i in range(1, 40):
+                if i % 10 == 0: continue 
                 x1, y1 = level_coords[i]
                 x2, y2 = level_coords[i+1]
                 line_color = (245, 197, 66) if i < unlocked_levels else (100, 100, 120)
                 pygame.draw.line(screen, line_color, (box_x + x1, box_y + y1), (box_x + x2, box_y + y2), 6)
 
             level_rects.clear()
-            for i in range(1, 21):
+            for i in range(1, 41):
                 cx, cy = box_x + level_coords[i][0], box_y + level_coords[i][1]
-                rect = pygame.Rect(cx - 26, cy - 26, 52, 52)
+                rect = pygame.Rect(cx - 20, cy - 20, 40, 40)
                 level_rects[i] = rect
 
                 is_hover = rect.collidepoint(mouse_pos)
@@ -582,17 +740,17 @@ while running:
                     bg_color = (60, 60, 75)
                     border_color = (40, 40, 50)
 
-                pygame.draw.rect(screen, border_color, (cx - 29, cy - 29, 58, 58), border_radius=29) 
-                pygame.draw.rect(screen, bg_color, rect, border_radius=26)
+                pygame.draw.rect(screen, border_color, (cx - 23, cy - 23, 46, 46), border_radius=23) 
+                pygame.draw.rect(screen, bg_color, rect, border_radius=20)
 
                 if is_unlocked:
                     lvl_text = small_font.render(str(i), True, (255, 255, 255))
                     screen.blit(lvl_text, (cx - lvl_text.get_width()//2, cy - lvl_text.get_height()//2))
                 else:
-                    pygame.draw.rect(screen, (200, 200, 200), (cx - 10, cy - 2, 20, 16), border_radius=3)
-                    pygame.draw.circle(screen, (200, 200, 200), (cx, cy - 2), 8, 3)
+                    pygame.draw.rect(screen, (200, 200, 200), (cx - 8, cy - 2, 16, 12), border_radius=3)
+                    pygame.draw.circle(screen, (200, 200, 200), (cx, cy - 2), 6, 2)
 
-            back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 360
+            back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 470
             back_button_rect = pygame.Rect(back_x, back_y, back_w, back_h)
             b_color, b_text_color = ((200, 60, 60), (255, 255, 255)) if back_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
             pygame.draw.rect(screen, (245, 197, 66), (back_x - 3, back_y - 3, back_w + 6, back_h + 6), border_radius=10)
@@ -628,38 +786,39 @@ while running:
 
         elif in_shop:
             draw_cosmic_background(screen, menu_mode=True)
-            box_w, box_h = 500, 420
+            box_w, box_h = 500, 440
             box_x, box_y = (700 - box_w) // 2, (500 - box_h) // 2
             pygame.draw.rect(screen, (10, 10, 20), (box_x - 5, box_y - 5, box_w + 10, box_h + 10), border_radius=15)
             pygame.draw.rect(screen, (40, 45, 70), (box_x, box_y, box_w, box_h), border_radius=15)
             
-            shop_title = title_font.render("STORE - SKINS", True, (245, 197, 66))
+            shop_title = title_font.render("STORE - SKINS & ITEMS", True, (245, 197, 66))
             screen.blit(shop_title, (350 - shop_title.get_width() // 2, box_y + 15))
 
             coin_text = font.render(f"YOUR COINS: {total_score}", True, (255, 255, 255))
-            screen.blit(coin_text, (350 - coin_text.get_width() // 2, box_y + 85))
+            screen.blit(coin_text, (350 - coin_text.get_width() // 2, box_y + 65))
 
-            start_y = box_y + 130
+            start_y = box_y + 105
             shop_skin_rects.clear()
             
+            # --- SKIN BUTONLARI ---
             for i, (skin_name, color) in enumerate(skin_colors.items()):
                 row = i // 2
                 col = i % 2
                 s_x = box_x + 35 + col * 220
-                s_y = start_y + row * 70
+                s_y = start_y + row * 60
                 
-                btn_rect = pygame.Rect(s_x, s_y, 200, 50)
+                btn_rect = pygame.Rect(s_x, s_y, 200, 45)
                 shop_skin_rects[skin_name] = btn_rect
                 
                 is_hover = btn_rect.collidepoint(mouse_pos)
                 bg_color = color if is_hover else (30, 34, 56)
                 text_color = (255, 255, 255) if is_hover else color
                 
-                pygame.draw.rect(screen, color, (s_x - 2, s_y - 2, 204, 54), border_radius=8)
+                pygame.draw.rect(screen, color, (s_x - 2, s_y - 2, 204, 49), border_radius=8)
                 pygame.draw.rect(screen, bg_color, btn_rect, border_radius=8)
                 
                 if current_skin == skin_name:
-                    pygame.draw.rect(screen, (255, 255, 255), (s_x - 4, s_y - 4, 208, 58), 3, border_radius=10)
+                    pygame.draw.rect(screen, (255, 255, 255), (s_x - 3, s_y - 3, 206, 51), 3, border_radius=10)
                     status_text = "EQUIPPED"
                 elif skin_name in unlocked_skins:
                     status_text = "OWNED"
@@ -667,12 +826,35 @@ while running:
                     status_text = f"{skin_prices[skin_name]} C"
                     
                 skin_name_surf = small_font.render(skin_name, True, text_color)
-                screen.blit(skin_name_surf, (s_x + 10, s_y + (50 - skin_name_surf.get_height()) // 2))
+                screen.blit(skin_name_surf, (s_x + 10, s_y + (45 - skin_name_surf.get_height()) // 2))
 
                 status_surf = small_font.render(status_text, True, text_color)
-                screen.blit(status_surf, (s_x + 190 - status_surf.get_width(), s_y + (50 - status_surf.get_height()) // 2))
+                screen.blit(status_surf, (s_x + 190 - status_surf.get_width(), s_y + (45 - status_surf.get_height()) // 2))
 
-            back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 340
+            # --- JETPACK BUTONU ---
+            j_y = start_y + 3 * 60
+            jetpack_rect = pygame.Rect(box_x + 35, j_y, 420, 45)
+            is_j_hover = jetpack_rect.collidepoint(mouse_pos)
+            j_color = (255, 120, 30) 
+            j_bg_color = j_color if is_j_hover else (30, 34, 56)
+            j_text_color = (255, 255, 255) if is_j_hover else j_color
+            
+            pygame.draw.rect(screen, j_color, (box_x + 33, j_y - 2, 424, 49), border_radius=8)
+            pygame.draw.rect(screen, j_bg_color, jetpack_rect, border_radius=8)
+            
+            if has_jetpack:
+                j_status_text = "OWNED"
+            else:
+                j_status_text = "100 C"
+                
+            j_name_surf = small_font.render("JETPACK (Hold SPACE to Fly)", True, j_text_color)
+            screen.blit(j_name_surf, (box_x + 45, j_y + (45 - j_name_surf.get_height()) // 2))
+            
+            j_status_surf = small_font.render(j_status_text, True, j_text_color)
+            screen.blit(j_status_surf, (box_x + 445 - j_status_surf.get_width(), j_y + (45 - j_status_surf.get_height()) // 2))
+
+            # --- GERİ BUTONU ---
+            back_w, back_h = 160, 50; back_x, back_y = 350 - back_w // 2, box_y + 365
             back_button_rect = pygame.Rect(back_x, back_y, back_w, back_h)
             b_color, b_text_color = ((200, 60, 60), (255, 255, 255)) if back_button_rect.collidepoint(mouse_pos) else ((20, 24, 46), (240, 240, 240))
             pygame.draw.rect(screen, (245, 197, 66), (back_x - 3, back_y - 3, back_w + 6, back_h + 6), border_radius=10) 
@@ -724,6 +906,15 @@ while running:
                 is_dashing = False
             
             if can_move and not is_dashing:
+                # --- JETPACK MEKANİĞİ ---
+                if has_jetpack and keys[pygame.K_SPACE] and jetpack_fuel > 0:
+                    jetpack_fuel -= 1 
+                    vel_y -= 1.6 
+                    if vel_y < -7: vel_y = -7 
+                    on_ground = False
+                    spawn_particles(player.centerx, player.bottom, (255, 120, 30), 2, 4, 3) 
+                    spawn_particles(player.centerx, player.bottom, (200, 200, 200), 1, 3, 1) 
+
                 if keys[pygame.K_LSHIFT] and dash_cooldown == 0:
                     dash_duration = 10
                     dash_cooldown = 40
@@ -744,7 +935,7 @@ while running:
                             if jump_sound: jump_sound.play()
                             can_double_jump = True
                             spawn_particles(player.centerx, player.bottom, (255, 255, 255), 8) 
-                        elif can_double_jump:
+                        elif can_double_jump and not has_jetpack:
                             vel_y = -15
                             if jump_sound: jump_sound.play()
                             can_double_jump = False
@@ -782,6 +973,7 @@ while running:
                         vel_y = 0
                         on_ground = True
                         can_double_jump = True 
+                        jetpack_fuel = max_jetpack_fuel 
                         
                         if not was_on_ground:
                             if land_sound: land_sound.play()
@@ -837,8 +1029,8 @@ while running:
                     else:
                         is_door_opening = False
                         door_anim_index = 3  
-                        if current_level < 20: transition_state = 1 
-                        elif current_level == 20:
+                        if current_level < 40: transition_state = 1 
+                        elif current_level == 40:
                             game_won = True
                             finish_time = current_time
                             if best_time == 0 or finish_time < best_time: best_time = finish_time
@@ -971,10 +1163,17 @@ while running:
             top_bar_y = 10
             ui_text_color = (240, 240, 240)
      
-            screen.blit(font.render(f'Coins: {score}', True, ui_text_color), (10, top_bar_y))
-            screen.blit(font.render(f'Level: {current_level}/20', True, ui_text_color), (160, top_bar_y))
-            screen.blit(font.render(f'Time: {round(current_time, 1)}s', True, ui_text_color), (300, top_bar_y))
-            if best_time > 0: screen.blit(font.render(f'Best: {round(best_time, 1)}s', True, (245, 197, 66)), (450, top_bar_y))
+            screen.blit(hud_font.render(f'Coins: {score}', True, ui_text_color), (10, top_bar_y))
+            screen.blit(hud_font.render(f'Level: {current_level}/40', True, ui_text_color), (160, top_bar_y))
+            screen.blit(hud_font.render(f'Time: {round(current_time, 1)}s', True, ui_text_color), (300, top_bar_y))
+            if best_time > 0: screen.blit(hud_font.render(f'Best: {round(best_time, 1)}s', True, (245, 197, 66)), (450, top_bar_y))
+
+            # --- JETPACK YAKIT BARI GÖSTERGESİ ---
+            if has_jetpack:
+                fuel_ratio = jetpack_fuel / max_jetpack_fuel
+                pygame.draw.rect(screen, (40, 40, 50), (10, 45, 120, 12), border_radius=4)
+                pygame.draw.rect(screen, (255, 120, 30), (10, 45, int(120 * fuel_ratio), 12), border_radius=4)
+                pygame.draw.rect(screen, (255, 255, 255), (10, 45, 120, 12), 1, border_radius=4)
 
     if transition_state > 0:
         fade_surface = pygame.Surface((700, 500))
@@ -1001,7 +1200,17 @@ while running:
                 transition_state = 0
     
     for event in pygame.event.get():
-        if event.type == pygame.QUIT: running = False
+        if event.type == pygame.QUIT:
+            running = False
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F11:
+                toggle_fullscreen()
+            elif event.key == pygame.K_f and (event.mod & (pygame.KMOD_CTRL | pygame.KMOD_META)):
+                toggle_fullscreen()
+            elif event.key == pygame.K_ESCAPE and fullscreen:
+                toggle_fullscreen()
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             click_time = pygame.time.get_ticks()
             if click_time - last_click_time > 150: 
@@ -1030,8 +1239,17 @@ while running:
                         if back_button_rect.collidepoint(mouse_pos): in_settings = False
                         if music_slider_rect.collidepoint(mouse_pos): dragging_music = True
                         elif jump_slider_rect.collidepoint(mouse_pos): dragging_jump = True
+                        
                     elif in_shop:
                         if back_button_rect.collidepoint(mouse_pos): in_shop = False
+                        
+                        # --- JETPACK SATIN ALMA TIKLAMASI ---
+                        if jetpack_rect.collidepoint(mouse_pos):
+                            if not has_jetpack and total_score >= 100:
+                                total_score -= 100
+                                has_jetpack = True
+                                if coin_sound: coin_sound.play()
+                                
                         for skin, rect in shop_skin_rects.items():
                             if rect.collidepoint(mouse_pos):
                                 if skin in unlocked_skins:
@@ -1059,6 +1277,17 @@ while running:
             if dragging_jump:
                 jump_volume = max(0.0, min(1.0, (mouse_pos[0] - slider_x) / slider_width))
                 if jump_sound: jump_sound.set_volume(jump_volume * 0.3)
+
+    if fullscreen:
+        win_w, win_h = display_surface.get_size()
+        scale = min(win_w / GAME_WIDTH, win_h / GAME_HEIGHT)
+        scaled_w = max(1, int(GAME_WIDTH * scale))
+        scaled_h = max(1, int(GAME_HEIGHT * scale))
+        scaled_screen = pygame.transform.smoothscale(screen, (scaled_w, scaled_h))
+        display_surface.fill((0, 0, 0))
+        display_surface.blit(scaled_screen, ((win_w - scaled_w) // 2, (win_h - scaled_h) // 2))
+    else:
+        display_surface.blit(screen, (0, 0))
 
     pygame.display.flip()
     clock.tick(60)
